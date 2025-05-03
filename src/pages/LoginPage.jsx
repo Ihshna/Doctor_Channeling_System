@@ -22,17 +22,20 @@ function LoginPage() {
     setError('');
     setSuccess('');
 
-    if (!loginData.email || !loginData.password) {
+    const { email, password } = loginData;
+
+    // Basic validation
+    if (!email || !password) {
       setError('Please fill in all fields.');
       return;
     }
 
-    if (!validateEmail(loginData.email)) {
+    if (!validateEmail(email)) {
       setError('Please enter a valid email address.');
       return;
     }
 
-    if (loginData.password.length < 6) {
+    if (password.length < 6) {
       setError('Password must be at least 6 characters.');
       return;
     }
@@ -41,43 +44,44 @@ function LoginPage() {
       const response = await axios.post('http://localhost:5000/login', loginData);
 
       if (response.status === 200) {
-        const { role, id, status } = response.data;
+        const user = response.data.user;
 
-        // Check for pending approval
-        if (role === 'Doctor' && status !== 'approved') {
-          setError('Your doctor account is awaiting admin approval.');
+        // Doctor with pending status
+        if (user.role === 'Doctor' && user.status !== 'approved') {
+          setError('Your account is awaiting admin approval.');
           return;
         }
 
+        // Login success
         setSuccess('Login Successful!');
-        localStorage.setItem("userRole", role);
-        localStorage.setItem("userId", id);
+        localStorage.setItem("userRole", user.role);
+        localStorage.setItem("userId", user.id);
 
-        // Redirect based on role
         setTimeout(() => {
-          if (role === 'Patient') {
+          if (user.role === 'Patient') {
             navigate('/patient-dashboard');
-          } else if (role === 'Doctor') {
+          } else if (user.role === 'Doctor') {
             navigate('/doctor-dashboard');
-          } else if (role === 'Admin') {
+          } else if (user.role === 'Admin') {
             navigate('/admin-dashboard');
           } else {
             navigate('/');
           }
-        }, 2000);
+        }, 1500);
       }
     } catch (error) {
-      console.error('Login Error:', error);
-      if (
-        error.response &&
-        error.response.status === 401 &&
-        error.response.data.message === "Your account is awaiting admin approval."
-      ) {
-        setError("Your account is awaiting admin approval.");
-      } else {
-        setError('Invalid Email or Password.');
+        console.error('Login Error:', error);
+      
+        if (
+          error.response &&
+          error.response.status === 401 &&
+          error.response.data?.message === 'Account awaiting admin approval.'
+        ) {
+          setError('Your account is awaiting admin approval.');
+        } else {
+          setError('Invalid Email or Password.');
+        }
       }
-    }
   };
 
   return (

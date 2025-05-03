@@ -53,7 +53,7 @@ app.post('/register', async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const status = role === 'Doctor' ? 'pending' : 'Active';
+    const status = role === 'Doctor' ? 'pending' : 'approved';
     const sql = 'INSERT INTO users (name, email, password, role,status) VALUES (?, ?, ?, ?,?)';
     db.query(sql, [name, email, hashedPassword, role,status], (err, result) => {
       if (err) {
@@ -73,39 +73,127 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// Login User
+//Login
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
+  
     const sql = 'SELECT * FROM users WHERE email = ?';
+    db.query(sql, [email], async (err, result) => {
+      if (err) {
+        console.error('Error during login:', err);
+        res.status(500).json({ message: 'Login failed.' });
+      } else {
+        if (result.length > 0) {
+          const user = result[0];
+          const isMatch = await bcrypt.compare(password, user.password);
   
-    db.query(sql, [email], async (err, results) => {
-      if (err || results.length === 0) {
-        return res.status(401).json({ message: 'Invalid email or password' });
-      }
-  
-      const user = results[0];
-      const match = await bcrypt.compare(password, user.password);
-  
-      if (!match) return res.status(401).json({ message: 'Invalid email or password' });
-  
-      if (user.role === 'doctor' && user.status !== 'approved') {
-        return res.status(403).json({ message: 'Waiting for admin approval' });
-      }
-  
-      res.status(200).json({ message: 'Login successful', user });
-    });
-  });
-  
-  // Approve Doctor
-  app.put('/admin/approve/:id', (req, res) => {
-    const { id } = req.params;
-    const sql = 'UPDATE users SET status = "approved" WHERE id = ?';
-    db.query(sql, [id], (err, result) => {
-      if (err) return res.status(500).json({ message: 'Approval failed' });
-      res.status(200).json({ message: 'Doctor approved successfully' });
-    });
-  });
+          if (!isMatch) return res.status(401).json({ message: 'Invalid credentials.' });
 
+      // CHECK DOCTOR APPROVAL
+      if (user.role === "Doctor" && user.status !== "approved") {
+        return res.status(401).json({ message: "Account awaiting admin approval." });
+      }
+
+      res.status(200).json({
+        message: 'Login successful!',
+        user:{
+        role: user.role,
+        id: user.id,
+        status:user.status,
+        email:user.email,
+        name:user.name
+
+        }
+        
+        
+      });
+    } else {
+      res.status(401).json({ message: 'Invalid credentials.' });
+    }
+      }
+    });
+  });
+  
+// Get pending doctor approvals
+app.get("/api/admin/doctors/pending", (req, res) => {
+    const query = "SELECT * FROM users WHERE role = 'Doctor' AND status = 'Pending'";
+    db.query(query, (err, result) => {
+      if (err) {
+        console.error("Error fetching pending doctors:", err);
+        return res.status(500).json({ error: "Server error" });
+      }
+      res.json(result);
+    });
+  });
+  
+  // Approve doctor
+  app.post("/api/admin/doctors/approve/:id", (req, res) => {
+    const id = req.params.id;
+    const query = "UPDATE users SET status = 'Approved' WHERE id = ?";
+    db.query(query, [id], (err, result) => {
+      if (err) return res.status(500).json({ error: "Approval failed" });
+      res.json({ message: "Doctor approved successfully" });
+    });
+  });
+  
+  // Reject doctor
+  app.post("/api/admin/doctors/reject/:id", (req, res) => {
+    const id = req.params.id;
+    const query = "DELETE FROM users WHERE id = ?";
+    db.query(query, [id], (err, result) => {
+      if (err) return res.status(500).json({ error: "Rejection failed" });
+      res.json({ message: "Doctor rejected and removed" });
+    });
+  });
+  
+// Get dashboard stats
+app.get('/admin/dashboard-stats', (req, res) => {
+    const stats = {};
+  
+    const userQuery = "SELECT COUNT(*) AS totalUsers FROM users";
+    const doctorQuery = "SELECT COUNT(*) AS totalDoctors FROM users WHERE role = 'Doctor'";
+    const appointmentQuery = "SELECT COUNT(*) AS totalAppointments FROM appointments";
+    const predictionQuery = "SELECT COUNT(*) AS totalPredictions FROM predictions";
+  
+    db.query(userQuery, (err, userResult) => {
+      if (err) return res.status(500).json(err);
+      stats.users = userResult[0].totalUsers;
+  
+      db.query(doctorQuery, (err, doctorResult) => {
+        if (err) return res.status(500).json(err);
+        stats.doctors = doctorResult[0].totalDoctors;
+  
+        db.query(appointmentQuery, (err, appointmentResult) => {
+          if (err) return res.status(500).json(err);
+          stats.appointments = appointmentResult[0].totalAppointments;
+  
+          db.query(predictionQuery, (err, predictionResult) => {
+            if (err) return res.status(500).json(err);
+            stats.predictions = predictionResult[0].totalPredictions;
+  
+            res.json(stats);
+          });
+        });
+      });
+    });
+  });
+  
+  //Fetch appointments
+  app.get('/admin/monthly-appointments', (req, res) => {
+    const query = `
+      SELECT 
+        MONTHNAME(appointment_date) AS month, 
+        COUNT(*) AS count 
+      FROM appointments 
+      GROUP BY MONTH(appointment_date)
+      ORDER BY MONTH(appointment_date);
+    `;
+  
+    db.query(query, (err, results) => {
+      if (err) return res.status(500).json(err);
+      res.json(results);
+    });
+  });  
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
