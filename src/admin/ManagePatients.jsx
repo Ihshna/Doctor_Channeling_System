@@ -5,8 +5,9 @@ const ManagePatients = () => {
   const [patients, setPatients] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [isNew, setIsNew] = useState(false);
   const [formData, setFormData] = useState({
-    age: "", gender: "", contact: "", address: "", medical_history: ""
+    name: "", email: "", password: "", age: "", gender: "", contact: "", address: "", medical_history: ""
   });
 
   useEffect(() => {
@@ -28,20 +29,27 @@ const ManagePatients = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const patient = patients.find(p => p.id === selectedId);
 
-    if (patient?.details) {
-      await axios.put(`http://localhost:5000/api/users/update-patient-details/${selectedId}`, formData);
-      alert("Patient details updated");
+    if (isNew) {
+      // Add new user + patient
+      const res = await axios.post("http://localhost:5000/api/users/add-patient", formData);
+      alert("New patient added!");
     } else {
-      await axios.post("http://localhost:5000/api/users/add-patient-details", {
-        user_id: selectedId, ...formData
-      });
-      alert("Patient details added");
+      const patient = patients.find(p => p.id === selectedId);
+      if (patient?.details) {
+        await axios.put(`http://localhost:5000/api/users/update-patient-details/${selectedId}`, formData);
+        alert("Patient details updated");
+      } else {
+        await axios.post("http://localhost:5000/api/users/add-patient-details", {
+          user_id: selectedId, ...formData
+        });
+        alert("Patient details added");
+      }
     }
 
     setSelectedId(null);
-    setFormData({ age: "", gender: "", contact: "", address: "", medical_history: "" });
+    setIsNew(false);
+    setFormData({ name: "", email: "", password: "123456", age: "", gender: "", contact: "", address: "", medical_history: "" });
     fetchPatients();
   };
 
@@ -52,22 +60,36 @@ const ManagePatients = () => {
     }
   };
 
-  const fillForm = (details) => {
-    setFormData(details);
+  const fillForm = (details, p) => {
+    setFormData({ ...details, name: p.name || "", email: p.email || "", password: "" });
   };
 
   const toggleRow = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
   };
 
+  const startNewPatient = () => {
+    setSelectedId(null);
+    setIsNew(true);
+    setFormData({ name: "", email: "", password: "", age: "", gender: "", contact: "", address: "", medical_history: "" });
+  };
+
   return (
     <div className="container mt-4">
       <h3>Manage Patients</h3>
+      <button className="btn btn-primary my-3" onClick={startNewPatient}>Add New Patient</button>
 
-      {selectedId && (
+      {(selectedId || isNew) && (
         <div className="card p-3 mt-3">
-          <h5>{patients.find(p => p.id === selectedId)?.details ? "Edit" : "Add"} Patient Details</h5>
+          <h5>{isNew ? "Add New Patient" : (patients.find(p => p.id === selectedId)?.details ? "Edit" : "Add") + " Patient Details"}</h5>
           <form onSubmit={handleSubmit}>
+            {isNew && (
+              <>
+                <input className="form-control my-2" name="name" placeholder="Full Name" value={formData.name} onChange={handleInputChange} required />
+                <input className="form-control my-2" name="email" type="email" placeholder="Email" value={formData.email} onChange={handleInputChange} required />
+                <input className="form-control my-2" name="password" type="text" placeholder="Default Password" value={formData.password} onChange={handleInputChange} required />
+              </>
+            )}
             <input className="form-control my-2" name="age" placeholder="Age" value={formData.age} onChange={handleInputChange} required />
             <input className="form-control my-2" name="gender" placeholder="Gender" value={formData.gender} onChange={handleInputChange} required />
             <input className="form-control my-2" name="contact" placeholder="Contact" value={formData.contact} onChange={handleInputChange} required />
@@ -97,7 +119,7 @@ const ManagePatients = () => {
                 <td>
                   {p.details ? (
                     <>
-                      <button className="btn btn-sm btn-info me-2" onClick={() => { setSelectedId(p.id); fillForm(p.details); }}>
+                      <button className="btn btn-sm btn-info me-2" onClick={() => { setSelectedId(p.id); setIsNew(false); fillForm(p.details, p); }}>
                         Edit
                       </button>
                       <button className="btn btn-sm btn-danger me-2" onClick={() => handleDelete(p.id)}>
@@ -108,7 +130,7 @@ const ManagePatients = () => {
                       </button>
                     </>
                   ) : (
-                    <button className="btn btn-sm btn-primary" onClick={() => setSelectedId(p.id)}>
+                    <button className="btn btn-sm btn-primary" onClick={() => { setSelectedId(p.id); setIsNew(false); }}>
                       Add Details
                     </button>
                   )}
@@ -117,6 +139,7 @@ const ManagePatients = () => {
               {expandedRow === p.id && p.details && (
                 <tr>
                   <td colSpan="4">
+                    <strong>Name:</strong> {p.name}<br />
                     <strong>Age:</strong> {p.details.age}<br />
                     <strong>Gender:</strong> {p.details.gender}<br />
                     <strong>Contact:</strong> {p.details.contact}<br />

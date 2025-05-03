@@ -291,6 +291,16 @@ app.post("/api/users/add-patient-details", (req, res) => {
   });
 });
 
+// Add new patient to users table
+app.post("/api/users/add-patient", (req, res) => {
+  const { email, role = "Patient", status = "approved" } = req.body;
+  const sql = "INSERT INTO users (email, role, status) VALUES (?, ?, ?)";
+  db.query(sql, [email, role, status], (err, result) => {
+    if (err) return res.status(500).json(err);
+    res.json({ message: "Patient added", id: result.insertId });
+  });
+});
+
 // Update patient details
 app.put("/api/users/update-patient-details/:id", (req, res) => {
   const { age, gender, contact, address, medical_history } = req.body;
