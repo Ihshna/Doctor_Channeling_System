@@ -263,6 +263,53 @@ app.delete("/api/users/delete-doctor-details/:userId", (req, res) => {
   });
 });
 
+// Get all approved patients from users table
+app.get("/api/users/approved-patients", (req, res) => {
+  const query = "SELECT * FROM users WHERE role = ? AND status = ?";
+  db.query(query, ['Patient', 'approved'], (err, results) => {
+    if (err) return res.status(500).json({ message: "Server error" });
+    res.json(results);
+  });
+});
+
+// Get patient details by user_id
+app.get("/api/users/patient-details/:id", (req, res) => {
+  const query = "SELECT * FROM patients WHERE user_id = ?";
+  db.query(query, [req.params.id], (err, results) => {
+    if (err) return res.status(500).json({ message: "Server error" });
+    res.json(results[0] || null);
+  });
+});
+
+// Add patient details
+app.post("/api/users/add-patient-details", (req, res) => {
+  const { user_id, age, gender, contact, address, medical_history } = req.body;
+  const query = `INSERT INTO patients (user_id, age, gender, contact, address, medical_history) VALUES (?, ?, ?, ?, ?, ?)`;
+  db.query(query, [user_id, age, gender, contact, address, medical_history], (err) => {
+    if (err) return res.status(500).json({ message: "Server error" });
+    res.json({ message: "Patient details added" });
+  });
+});
+
+// Update patient details
+app.put("/api/users/update-patient-details/:id", (req, res) => {
+  const { age, gender, contact, address, medical_history } = req.body;
+  const query = `UPDATE patients SET age=?, gender=?, contact=?, address=?, medical_history=? WHERE user_id=?`;
+  db.query(query, [age, gender, contact, address, medical_history, req.params.id], (err) => {
+    if (err) return res.status(500).json({ message: "Server error" });
+    res.json({ message: "Patient details updated" });
+  });
+});
+
+// Delete patient details
+app.delete("/api/users/delete-patient-details/:id", (req, res) => {
+  const query = "DELETE FROM patients WHERE user_id = ?";
+  db.query(query, [req.params.id], (err) => {
+    if (err) return res.status(500).json({ message: "Server error" });
+    res.json({ message: "Patient details deleted" });
+  });
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
