@@ -165,7 +165,7 @@ app.get('/admin/dashboard-stats', (req, res) => {
     });
   });  
 
-  // Get pending doctor approvals (status is 'pending' in lowercase)
+  // Get pending doctor approval
 app.get("/api/admin/doctors/pending", (req, res) => {
     const query = "SELECT * FROM users WHERE role = 'Doctor' AND status = 'pending'"; // 'pending' in lowercase
     db.query(query, (err, result) => {
