@@ -114,37 +114,7 @@ app.post('/login', (req, res) => {
     });
   });
   
-// Get pending doctor approvals
-app.get("/api/admin/doctors/pending", (req, res) => {
-    const query = "SELECT * FROM users WHERE role = 'Doctor' AND status = 'Pending'";
-    db.query(query, (err, result) => {
-      if (err) {
-        console.error("Error fetching pending doctors:", err);
-        return res.status(500).json({ error: "Server error" });
-      }
-      res.json(result);
-    });
-  });
-  
-  // Approve doctor
-  app.post("/api/admin/doctors/approve/:id", (req, res) => {
-    const id = req.params.id;
-    const query = "UPDATE users SET status = 'Approved' WHERE id = ?";
-    db.query(query, [id], (err, result) => {
-      if (err) return res.status(500).json({ error: "Approval failed" });
-      res.json({ message: "Doctor approved successfully" });
-    });
-  });
-  
-  // Reject doctor
-  app.post("/api/admin/doctors/reject/:id", (req, res) => {
-    const id = req.params.id;
-    const query = "DELETE FROM users WHERE id = ?";
-    db.query(query, [id], (err, result) => {
-      if (err) return res.status(500).json({ error: "Rejection failed" });
-      res.json({ message: "Doctor rejected and removed" });
-    });
-  });
+
   
 // Get dashboard stats
 app.get('/admin/dashboard-stats', (req, res) => {
@@ -194,6 +164,43 @@ app.get('/admin/dashboard-stats', (req, res) => {
       res.json(results);
     });
   });  
+
+  // Get pending doctor approvals (status is 'pending' in lowercase)
+app.get("/api/admin/doctors/pending", (req, res) => {
+    const query = "SELECT * FROM users WHERE role = 'Doctor' AND status = 'pending'"; // 'pending' in lowercase
+    db.query(query, (err, result) => {
+      if (err) {
+        console.error("Error fetching pending doctors:", err);
+        return res.status(500).json({ error: "Server error" });
+      }
+      res.json(result); 
+    });
+  });
+  
+  // Approve doctor
+  app.post("/api/admin/doctors/approve/:id", (req, res) => {
+    const id = req.params.id;
+    const query = "UPDATE users SET status = 'approved' WHERE id = ?";
+    db.query(query, [id], (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: "Approval failed" });
+      }
+      res.json({ message: "Doctor approved successfully" });
+    });
+  });
+  
+  // Reject doctor
+  app.post("/api/admin/doctors/reject/:id", (req, res) => {
+    const id = req.params.id;
+    const query = "DELETE FROM users WHERE id = ?";
+    db.query(query, [id], (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: "Rejection failed" });
+      }
+      res.json({ message: "Doctor rejected and removed" });
+    });
+  });
+  
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

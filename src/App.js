@@ -6,6 +6,7 @@ import RegisterPage from './pages/RegisterPage';
 
 import AdminLayout from './admin/AdminLayout';
 import AdminDashboard from './admin/AdminDashboard';
+import PendingDoctors from './admin/PendingDoctors';
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
 
         <Route path="/admin-dashboard" element={<AdminLayout/>} >
           <Route index element={<AdminDashboard/>} />
+          <Route path="doctors/pending" element={<PendingDoctors />} />
         </Route>
         
       </Routes>
