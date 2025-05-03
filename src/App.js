@@ -7,6 +7,9 @@ import RegisterPage from './pages/RegisterPage';
 import AdminLayout from './admin/AdminLayout';
 import AdminDashboard from './admin/AdminDashboard';
 import PendingDoctors from './admin/PendingDoctors';
+import ManageDoctors from "./admin/ManageDoctors";
+import ManagePatients from './admin/ManagePatients';
+
 
 
 function App() {
@@ -20,6 +23,8 @@ function App() {
         <Route path="/admin-dashboard" element={<AdminLayout/>} >
           <Route index element={<AdminDashboard/>} />
           <Route path="doctors/pending" element={<PendingDoctors />} />
+          <Route path="doctors/list" element={<ManageDoctors />} />
+          <Route path="patients" element={<ManagePatients />} />
         </Route>
         
       </Routes>

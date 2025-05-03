@@ -39,7 +39,7 @@ const AdminSidebar = () => {
           {openDoctors && (
             <ul className="nav flex-column ms-3 fade-in">
               <li><Link to="/admin-dashboard/doctors/pending" className="nav-link">Pending Approvals</Link></li>
-              <li><Link to="/admin/doctors/list" className="nav-link">Manage Doctors</Link></li>
+              <li><Link to="/admin-dashboard/doctors/list" className="nav-link">Manage Doctors</Link></li>
             </ul>
           )}
         </li>
@@ -51,7 +51,7 @@ const AdminSidebar = () => {
           </button>
           {openPatients && (
             <ul className="nav flex-column ms-3 fade-in">
-              <li><Link to="/admin/patients/list" className="nav-link">Manage Patients</Link></li>
+              <li><Link to="/admin-dashboard/patients" className="nav-link">Manage Patients</Link></li>
             </ul>
           )}
         </li>
