@@ -264,17 +264,47 @@ app.delete("/api/users/delete-doctor-details/:userId", (req, res) => {
 });
 
 // Get all approved patients from users table
-app.get("/api/users/approved-patients", (req, res) => {
-  const query = "SELECT * FROM users WHERE role = ? AND status = ?";
-  db.query(query, ['Patient', 'approved'], (err, results) => {
-    if (err) return res.status(500).json({ message: "Server error" });
-    res.json(results);
+app.get('/api/users/approved-patients', (req, res) => {
+  const query = `
+    SELECT u.id, u.name, u.email, 
+           d.contact, d.address, d.age, d.gender, d.medical_history,
+           d.hypertension, d.heart_disease, d.smoking_history,
+           d.bmi, d.HbA1c_level, d.blood_glucose_level, d.diabetes
+    FROM users u
+    LEFT JOIN patient_details d ON u.id = d.user_id
+    WHERE u.role = 'patient' AND u.status = 'approved'
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+    const patients = results.map(row => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      details: row.age !== null ? {
+        contact: row.contact,
+        address: row.address,
+        age: row.age,
+        gender: row.gender,
+        medical_history: row.medical_history,
+        hypertension: row.hypertension,
+        heart_disease: row.heart_disease,
+        smoking_history: row.smoking_history,
+        bmi: row.bmi,
+        HbA1c_level: row.HbA1c_level,
+        blood_glucose_level: row.blood_glucose_level,
+        diabetes: row.diabetes
+      } : null
+    }));
+    res.json(patients);
   });
 });
 
+
+
 // Get patient details by user_id
 app.get("/api/users/patient-details/:id", (req, res) => {
-  const query = "SELECT * FROM patients WHERE user_id = ?";
+  const query = "SELECT * FROM patient_details WHERE user_id = ?";
   db.query(query, [req.params.id], (err, results) => {
     if (err) return res.status(500).json({ message: "Server error" });
     res.json(results[0] || null);
@@ -282,43 +312,86 @@ app.get("/api/users/patient-details/:id", (req, res) => {
 });
 
 // Add patient details
-app.post("/api/users/add-patient-details", (req, res) => {
-  const { user_id, age, gender, contact, address, medical_history } = req.body;
-  const query = `INSERT INTO patients (user_id, age, gender, contact, address, medical_history) VALUES (?, ?, ?, ?, ?, ?)`;
-  db.query(query, [user_id, age, gender, contact, address, medical_history], (err) => {
-    if (err) return res.status(500).json({ message: "Server error" });
-    res.json({ message: "Patient details added" });
+
+app.post('/api/users/add-patient-details', (req, res) => {
+  const {
+    user_id, contact, address, age, gender, medical_history,
+    hypertension, heart_disease, smoking_history,
+    bmi, HbA1c_level, blood_glucose_level, diabetes
+  } = req.body;
+
+  const query = `
+    INSERT INTO patient_details (
+      user_id, contact, address, age, gender, medical_history,
+      hypertension, heart_disease, smoking_history,
+      bmi, HbA1c_level, blood_glucose_level, diabetes
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  db.query(query, [
+    user_id, contact, address, age, gender, medical_history,
+    hypertension, heart_disease, smoking_history,
+    bmi, HbA1c_level, blood_glucose_level, diabetes
+  ], (err, result) => {
+    if (err) return res.status(500).json({ error: err });
+    res.status(201).json({ message: 'Details added' });
   });
 });
 
+
 // Add new patient to users table
-app.post("/api/users/add-patient", (req, res) => {
-  const { email, role = "Patient", status = "approved" } = req.body;
-  const sql = "INSERT INTO users (email, role, status) VALUES (?, ?, ?)";
-  db.query(sql, [email, role, status], (err, result) => {
-    if (err) return res.status(500).json(err);
-    res.json({ message: "Patient added", id: result.insertId });
+app.post('/api/users/add-patient', (req, res) => {
+  const { name, email } = req.body;
+  const query = 'INSERT INTO users (name, email, role, status) VALUES (?, ?, "Patient", "approved")';
+  db.query(query, [name, email], (err, result) => {
+    if (err) return res.status(500).json({ error: err });
+    res.status(201).json({ message: 'Patient added', id: result.insertId });
   });
 });
 
 // Update patient details
-app.put("/api/users/update-patient-details/:id", (req, res) => {
-  const { age, gender, contact, address, medical_history } = req.body;
-  const query = `UPDATE patients SET age=?, gender=?, contact=?, address=?, medical_history=? WHERE user_id=?`;
-  db.query(query, [age, gender, contact, address, medical_history, req.params.id], (err) => {
-    if (err) return res.status(500).json({ message: "Server error" });
-    res.json({ message: "Patient details updated" });
+app.put('/api/users/update-patient-details/:id', (req, res) => {
+  const { id } = req.params;
+  const {
+    contact, address, age, gender, medical_history,
+    hypertension, heart_disease, smoking_history,
+    bmi, HbA1c_level, blood_glucose_level, diabetes
+  } = req.body;
+
+  const query = `
+    UPDATE patient_details SET
+      contact = ?, address = ?, age = ?, gender = ?, medical_history = ?,
+      hypertension = ?, heart_disease = ?, smoking_history = ?,
+      bmi = ?, HbA1c_level = ?, blood_glucose_level = ?, diabetes = ?
+    WHERE user_id = ?
+  `;
+  db.query(query, [
+    contact, address, age, gender, medical_history,
+    hypertension, heart_disease, smoking_history,
+    bmi, HbA1c_level, blood_glucose_level, diabetes, id
+  ], (err, result) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json({ message: 'Details updated' });
   });
 });
 
+
 // Delete patient details
-app.delete("/api/users/delete-patient-details/:id", (req, res) => {
-  const query = "DELETE FROM patients WHERE user_id = ?";
-  db.query(query, [req.params.id], (err) => {
-    if (err) return res.status(500).json({ message: "Server error" });
-    res.json({ message: "Patient details deleted" });
+app.delete('/api/users/delete-patient/:id', (req, res) => {
+  const { id } = req.params;
+
+  const deleteDetails = 'DELETE FROM patient_details WHERE user_id = ?';
+  const deleteUser = 'DELETE FROM users WHERE id = ?';
+
+  db.query(deleteDetails, [id], (err) => {
+    if (err) return res.status(500).json({ error: err });
+
+    db.query(deleteUser, [id], (err) => {
+      if (err) return res.status(500).json({ error: err });
+      res.json({ message: 'Patient deleted' });
+    });
   });
 });
+
 
 
 app.listen(PORT, () => {
