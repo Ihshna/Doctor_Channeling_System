@@ -57,7 +57,7 @@ const AdminSidebar = () => {
         </li>
 
         <li className="nav-item">
-          <Link to="/admin/schedule" className="nav-link">
+          <Link to="/admin-dashboard/schedule" className="nav-link">
             <FaClipboardList className="me-2" /> Channeling Schedule
           </Link>
         </li>

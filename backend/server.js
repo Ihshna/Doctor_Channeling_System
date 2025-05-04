@@ -393,6 +393,53 @@ app.delete('/api/users/delete-patient/:id', (req, res) => {
 });
 
 
+//GET all doctors
+app.get('/api/doctors', (req, res) => {
+  const sql = 'SELECT * FROM users WHERE role="Doctor" AND status="approved"';
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(result);
+  });
+});
+
+//GET all schedules with doctor info
+app.get('/api/schedules', (req, res) => {
+  const sql = `
+    SELECT s.*, u.name AS doctor_name
+    FROM schedule s
+    JOIN users u ON s.user_id = u.id
+  `;
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error('MySQL Select Error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(result);
+  });
+});
+
+
+// POST a new schedule
+app.post('/api/schedules', (req, res) => {
+  const { user_id, date, start_time, end_time, fee, slots, room, notes } = req.body;
+
+  if (!user_id || !date || !start_time || !end_time || !fee || !slots || !room) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const sql = `
+    INSERT INTO schedule(user_id, date, start_time, end_time, fee, slots, room, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(sql, [user_id, date, start_time, end_time, fee, slots, room, notes], (err, result) => {
+    if (err) {
+      console.error('MySQL Insert Error:', err); // Log the actual error
+      return res.status(500).json({ error: 'Failed to create schedule' });
+    }
+    res.status(201).json({ message: 'Schedule created successfully' });
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

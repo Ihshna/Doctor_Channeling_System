@@ -9,7 +9,7 @@ import AdminDashboard from './admin/AdminDashboard';
 import PendingDoctors from './admin/PendingDoctors';
 import ManageDoctors from "./admin/ManageDoctors";
 import ManagePatients from './admin/ManagePatients';
-
+import ChannelingSchedule from './admin/ChannelingSchedule';
 
 
 function App() {
@@ -25,6 +25,7 @@ function App() {
           <Route path="doctors/pending" element={<PendingDoctors />} />
           <Route path="doctors/list" element={<ManageDoctors />} />
           <Route path="patients" element={<ManagePatients />} />
+          <Route path="schedule" element={<ChannelingSchedule />} />
         </Route>
         
       </Routes>
