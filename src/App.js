@@ -1,9 +1,11 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
+//Admin
 import AdminLayout from './admin/AdminLayout';
 import AdminDashboard from './admin/AdminDashboard';
 import PendingDoctors from './admin/PendingDoctors';
@@ -12,6 +14,9 @@ import ManagePatients from './admin/ManagePatients';
 import ChannelingSchedule from './admin/ChannelingSchedule';
 import Appointments from './admin/Appointment';
 import SystemReport from './admin/SystemReport';
+
+//Doctor
+import DoctorLayout from './doctor/DoctorLayout';
 
 function App() {
   return (
@@ -29,8 +34,13 @@ function App() {
           <Route path="schedule" element={<ChannelingSchedule />} />
           <Route path="appointments" element={<Appointments />} />
           <Route path="system-report" element={<SystemReport />} />
-
         </Route>
+
+        <Route path="/doctor-dashboard" element={<DoctorLayout/>} >
+        
+        </Route>
+
+
         
       </Routes>
     </BrowserRouter>
