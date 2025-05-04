@@ -1,17 +1,14 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 import {
   FaHome,
   FaUserMd,
   FaUsers,
   FaCalendarCheck,
-  FaFileMedical,
   FaChartBar,
   FaCog,
   FaSignOutAlt,
-  FaUserPlus,
-  FaUserEdit,
-  FaListAlt,
   FaClipboardList
 } from "react-icons/fa";
 
@@ -19,6 +16,15 @@ const AdminSidebar = () => {
   const [openDoctors, setOpenDoctors] = useState(false);
   const [openPatients, setOpenPatients] = useState(false);
   const [openReports, setOpenReports] = useState(false);
+
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    const confirmLogout = window.confirm("Are you sure you want to logout?");
+    if (confirmLogout) {
+      navigate("/"); 
+    }
+  };
 
   return (
     <div className="admin-sidebar bg-white shadow-sm p-3">
@@ -75,22 +81,21 @@ const AdminSidebar = () => {
           </button>
           {openReports && (
             <ul className="nav flex-column ms-3 fade-in">
-              <li><Link to="/admin/reports/system" className="nav-link">System Reports</Link></li>
-              <li><Link to="/admin/reports/graphs" className="nav-link">Charts/Graphs</Link></li>
+              <li><Link to="/admin-dashboard/system-report" className="nav-link">System Reports</Link></li>
             </ul>
           )}
         </li>
 
-        <li className="nav-item">
-          <Link to="/admin/settings" className="nav-link">
-            <FaCog className="me-2" /> Settings
-          </Link>
-        </li>
 
+        {/* Logout Button */}
         <li className="nav-item">
-          <Link to="/login" className="nav-link text-danger">
+          <button
+            className="nav-link text-danger bg-transparent border-0 text-start w-100"
+            onClick={handleLogout}
+            style={{ cursor: "pointer" }}
+          >
             <FaSignOutAlt className="me-2" /> Logout
-          </Link>
+          </button>
         </li>
       </ul>
     </div>

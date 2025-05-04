@@ -487,6 +487,28 @@ app.delete('/api/appointments/:id', (req, res) => {
   });
 });
 
+//System report
+app.get('/api/system-report', (req, res) => {
+  const sql = `
+    SELECT 
+      (SELECT COUNT(*) FROM users WHERE role = 'Patient') AS total_patients,
+      (SELECT COUNT(*) FROM users WHERE role = 'Doctor') AS total_doctors,
+      (SELECT COUNT(*) FROM appointments) AS total_appointments,
+      (SELECT COUNT(*) FROM appointments WHERE status = 'Completed') AS completed_appointments,
+      (SELECT COUNT(*) FROM appointments WHERE status = 'Pending') AS pending_appointments
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching system report:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+    res.json(results[0]);
+  });
+});
+
+
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

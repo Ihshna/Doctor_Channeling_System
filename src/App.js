@@ -11,6 +11,7 @@ import ManageDoctors from "./admin/ManageDoctors";
 import ManagePatients from './admin/ManagePatients';
 import ChannelingSchedule from './admin/ChannelingSchedule';
 import Appointments from './admin/Appointment';
+import SystemReport from './admin/SystemReport';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           <Route path="patients" element={<ManagePatients />} />
           <Route path="schedule" element={<ChannelingSchedule />} />
           <Route path="appointments" element={<Appointments />} />
+          <Route path="system-report" element={<SystemReport />} />
 
         </Route>
         
