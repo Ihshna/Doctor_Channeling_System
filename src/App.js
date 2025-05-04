@@ -10,7 +10,7 @@ import PendingDoctors from './admin/PendingDoctors';
 import ManageDoctors from "./admin/ManageDoctors";
 import ManagePatients from './admin/ManagePatients';
 import ChannelingSchedule from './admin/ChannelingSchedule';
-
+import Appointments from './admin/Appointment';
 
 function App() {
   return (
@@ -26,6 +26,8 @@ function App() {
           <Route path="doctors/list" element={<ManageDoctors />} />
           <Route path="patients" element={<ManagePatients />} />
           <Route path="schedule" element={<ChannelingSchedule />} />
+          <Route path="appointments" element={<Appointments />} />
+
         </Route>
         
       </Routes>

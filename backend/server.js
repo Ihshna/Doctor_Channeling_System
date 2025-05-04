@@ -441,6 +441,53 @@ app.post('/api/schedules', (req, res) => {
   });
 });
 
+ //Get all appointments
+ app.get('/api/appointments', (req, res) => {
+  const sql = `
+    SELECT 
+      a.id AS appointment_id,
+      p.name AS patient_name,
+      d.name AS doctor_name,
+      a.appointment_date,
+      a.status
+    FROM appointments a
+    JOIN users p ON a.patient_id = p.id
+    JOIN doctors d ON a.doctor_id = d.id
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching appointments:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+    res.json(results);
+  });
+});
+
+//Update appointment status
+
+app.put('/api/appointments/:id', (req, res) => {
+  const { status } = req.body;
+  const id = req.params.id;
+  const sql = "UPDATE appointments SET status = ? WHERE id = ?";
+  db.query(sql, [status, id], (err, result) => {
+    if (err) return res.status(500).json({ error: "Failed to update status" });
+    res.json({ message: "Status updated successfully" });
+  });
+});
+
+
+//Delete Appointment
+app.delete('/api/appointments/:id', (req, res) => {
+  const id = req.params.id;
+  const sql = "DELETE FROM appointments WHERE id = ?";
+  db.query(sql, [id], (err, result) => {
+    if (err) return res.status(500).json({ error: "Failed to delete appointment" });
+    res.json({ message: "Appointment deleted" });
+  });
+});
+
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

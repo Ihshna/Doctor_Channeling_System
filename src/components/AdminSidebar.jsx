@@ -63,14 +63,8 @@ const AdminSidebar = () => {
         </li>
 
         <li className="nav-item">
-          <Link to="/admin/appointments" className="nav-link">
+          <Link to="/admin-dashboard/appointments" className="nav-link">
             <FaCalendarCheck className="me-2" /> Appointments
-          </Link>
-        </li>
-
-        <li className="nav-item">
-          <Link to="/admin/prescriptions" className="nav-link">
-            <FaFileMedical className="me-2" /> Prescriptions
           </Link>
         </li>
 
