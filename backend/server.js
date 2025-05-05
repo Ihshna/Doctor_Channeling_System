@@ -670,6 +670,93 @@ app.get('/patient-history', (req, res) => {
   });
 });
 
+// Fetch confirmed patients with details
+app.get('/api/patients', (req, res) => {
+  const query = `
+    SELECT u.id AS patient_id, u.name, pd.age, pd.gender, pd.contact
+    FROM appointments a
+    JOIN users u ON a.patient_id = u.id
+    JOIN patient_details pd ON u.id = pd.user_id
+    WHERE a.status = 'Confirmed'
+  `;
+  db.query(query, (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(results);
+  });
+});
+
+// Fetch full details for one patient including history + latest prescription
+app.get('/api/patients/:id/details', (req, res) => {
+  const patientId = req.params.id;
+  const query = `
+    SELECT 
+    pd.medical_history,
+    pd.hypertension,
+    pd.smoking_history,
+    pd.heart_disease, 
+    pd.bmi,
+    pd.Hba1c_level, 
+    pd.blood_glucose_level,
+    pd.diabetes,
+           (
+    SELECT notes FROM prescriptions WHERE patient_id = ? 
+    ORDER BY prescribed_date DESC LIMIT 1) AS latest_prescription,
+          (
+    SELECT prescribed_date FROM prescriptions WHERE patient_id = ? 
+    ORDER BY prescribed_date DESC LIMIT 1) AS latest_date
+    FROM patient_details pd
+    WHERE pd.user_id = ?
+  `;
+  db.query(query, [patientId, patientId, patientId], (err, result) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(result[0]);
+  });
+});
+
+// Add a new prescription
+app.post('/api/prescriptions/add', (req, res) => {
+  const { patient_id, notes } = req.body;
+  const query = `
+    INSERT INTO prescriptions (patient_id, prescribed_date,notes)
+    VALUES (?, NOW(),?)
+  `;
+  db.query(query, [patient_id, notes], (err) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json({ message: 'Prescription added successfully' });
+  });
+});
+
+// Update latest prescription
+app.post('/api/prescriptions/update', (req, res) => {
+  const { patient_id, notes } = req.body;
+  const query = `
+    UPDATE prescriptions
+    SET notes = ?
+    WHERE patient_id = ?
+    ORDER BY prescribed_date DESC
+    LIMIT 1
+  `;
+  db.query(query, [notes, patient_id], (err) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json({ message: 'Prescription updated successfully' });
+  });
+});
+
+// Delete latest prescription
+app.post('/api/prescriptions/delete', (req, res) => {
+  const { patient_id } = req.body;
+  const getLatestQuery = `
+    SELECT id FROM prescriptions WHERE patient_id = ? ORDER BY prescribed_date DESC LIMIT 1
+  `;
+  db.query(getLatestQuery, [patient_id], (err, result) => {
+    if (err || result.length === 0) return res.status(500).json({ error: 'No prescription found' });
+    const deleteQuery = `DELETE FROM prescriptions WHERE id = ?`;
+    db.query(deleteQuery, [result[0].id], (err) => {
+      if (err) return res.status(500).json({ error: err });
+      res.json({ message: 'Prescription deleted successfully' });
+    });
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

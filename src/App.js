@@ -20,6 +20,7 @@ import DoctorLayout from './doctor/DoctorLayout';
 import DoctorDashboard from './doctor/DoctorDashboard';
 import DoctorAppointments from './doctor/DoctorAppointments';
 import PatientHistory from './doctor/PatientHistory';
+import WritePrescription from './doctor/WritePrescription';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
           <Route index element={<DoctorDashboard/>} />
           <Route path="appointments" element={<DoctorAppointments />} />
           <Route path="patients/history" element={<PatientHistory />} />
+          <Route path="prescriptions/patients" element={<WritePrescription />} />
         </Route>
 
 

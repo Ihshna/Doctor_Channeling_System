@@ -60,8 +60,7 @@ const DoctorSidebar = () => {
           </button>
           {openPrescriptions && (
             <ul className="nav flex-column ms-3 fade-in">
-              <li><Link to="/doctor-dashboard/prescriptions/new" className="nav-link">New Prescription</Link></li>
-              <li><Link to="/doctor-dashboard/prescriptions" className="nav-link">View All</Link></li>
+              <li><Link to="/doctor-dashboard/prescriptions/patients" className="nav-link">View All</Link></li>
             </ul>
           )}
         </li>
