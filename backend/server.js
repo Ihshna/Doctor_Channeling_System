@@ -164,32 +164,48 @@ app.delete('/superadmin/delete-admin/:id', (req, res) => {
   });
 });
 
-// Super Admin: View Pending Admins
-app.get('/pending-admins', (req, res) => {
-  const sql = 'SELECT id, name, email FROM users WHERE role = "Admin" AND status = "pending"';
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ message: 'Failed to fetch pending admins.' });
-    res.json(results);
+// Add New Admin
+app.post('/add-admin', async (req, res) => {
+  const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  // Check if the email already exists
+  db.query('SELECT * FROM users WHERE email = ?', [email], async (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: 'Database error', error: err });
+    }
+
+    if (result.length > 0) {
+      return res.status(400).json({ message: 'Admin with this email already exists' });
+    }
+
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const user = {
+        name,
+        email,
+        password: hashedPassword,
+        role: 'Admin',
+        status: 'approved'
+      };
+
+      db.query('INSERT INTO users SET ?', user, (err, result) => {
+        if (err) {
+          return res.status(500).json({ message: 'Failed to add admin', error: err });
+        }
+
+        return res.status(200).json({ message: 'Admin added successfully' });
+      });
+    } catch (err) {
+      return res.status(500).json({ message: 'Hashing error', error: err });
+    }
   });
 });
 
-// Super Admin: Approve Admin
-app.post('/approve-admin/:id', (req, res) => {
-  const sql = 'UPDATE users SET status = "approved" WHERE id = ?';
-  db.query(sql, [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ message: 'Failed to approve admin.' });
-    res.json({ message: 'Admin approved successfully.' });
-  });
-});
-
-// Super Admin: Reject Admin
-app.post('/reject-admin/:id', (req, res) => {
-  const sql = 'UPDATE users SET status = "rejected" WHERE id = ?';
-  db.query(sql, [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ message: 'Failed to reject admin.' });
-    res.json({ message: 'Admin rejected successfully.' });
-  });
-});
 
 
 // Get dashboard stats

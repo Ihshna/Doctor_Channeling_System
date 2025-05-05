@@ -27,6 +27,7 @@ import DoctorRecommendations from './doctor/DoctorRecommendations';
 import SuperAdminLayout from './superAdmin/SuperAdminLayout';
 import SuperAdminDashboard from './superAdmin/SuperAdminDashboard';
 import AdminList from './superAdmin/AdminList';
+import AddAdminForm from './superAdmin/AddAdminForm';
 
 function App() {
   return (
@@ -57,6 +58,7 @@ function App() {
         <Route path="/superadmin-dashboard" element={<SuperAdminLayout/>} >
           <Route index element={<SuperAdminDashboard/>} />
           <Route path="view-admins" element={<AdminList />} />
+          <Route path="add-admin" element={<AddAdminForm />} />
         </Route>
 
 
