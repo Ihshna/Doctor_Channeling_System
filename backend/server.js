@@ -758,6 +758,64 @@ app.post('/api/prescriptions/delete', (req, res) => {
   });
 });
 
+//Fetch confirmed patients for recommendation list
+app.get('/api/patients/confirmed', (req, res) => {
+  const sql = `
+    SELECT u.id AS patient_id, u.name, d.age, d.gender, d.contact
+    FROM appointments a
+    JOIN users u ON a.patient_id = u.id
+    JOIN patient_details d ON u.id = d.patient_id
+    WHERE a.status = 'Confirmed'
+  `;
+
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(result);
+  });
+});
+
+//Add a new medical recommendation
+app.post('/api/recommendations', (req, res) => {
+  const {
+    patient_id,
+    recommendation_text,
+    recommendation_type,
+    date_time,
+    video_link,
+    location,
+    meeting_purpose
+  } = req.body;
+
+  const sql = `
+    INSERT INTO medical_recommendations 
+    (patient_id, recommendation_text, recommendation_type, date_time, video_link, location, meeting_purpose) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(sql, [patient_id, recommendation_text, recommendation_type, date_time, video_link, location, meeting_purpose], (err, result) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json({ message: 'Recommendation added successfully' });
+  });
+});
+
+//Get all recommendations with patient details
+app.get('/api/recommendations', (req, res) => {
+  const sql = `
+    SELECT r.*, u.name, d.age, d.gender, d.contact
+    FROM medical_recommendations r
+    JOIN users u ON r.patient_id = u.id
+    JOIN patient_details d ON u.id = d.patient_id
+    ORDER BY r.created_at DESC
+  `;
+
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(result);
+  });
+});
+
+
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

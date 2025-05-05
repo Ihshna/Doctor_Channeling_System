@@ -68,7 +68,7 @@ const DoctorSidebar = () => {
 
         {/* Profile Settings */}
         <li className="nav-item">
-          <Link to="/doctor-dashboard/settings" className="nav-link">
+          <Link to="/doctor-dashboard/recommendations" className="nav-link">
             <FaUserCog className="me-2" /> Medical recommendation
           </Link>
         </li>

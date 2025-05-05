@@ -21,6 +21,7 @@ import DoctorDashboard from './doctor/DoctorDashboard';
 import DoctorAppointments from './doctor/DoctorAppointments';
 import PatientHistory from './doctor/PatientHistory';
 import WritePrescription from './doctor/WritePrescription';
+import DoctorRecommendations from './doctor/DoctorRecommendations';
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
           <Route path="appointments" element={<DoctorAppointments />} />
           <Route path="patients/history" element={<PatientHistory />} />
           <Route path="prescriptions/patients" element={<WritePrescription />} />
+          <Route path="recommendations" element={<DoctorRecommendations />} />
         </Route>
 
 
