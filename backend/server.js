@@ -554,6 +554,123 @@ app.get('/appointments-calendar', (req, res) => {
   });
 });
 
+//GET All Appointments
+app.get('/appointments', (req, res) => {
+  const q = `
+    SELECT 
+      a.id as appointment_id,
+      a.appointment_date,
+      a.status,
+      u.name AS patientName,
+      p.contact,
+      p.age,
+      p.medical_history
+    FROM appointments a 
+    JOIN users u ON a.patient_id = u.id
+    JOIN patient_details p ON a.patient_id = p.user_id
+    WHERE a.status = 'Pending'
+    
+  `;
+
+  db.query(q, (err, results) => {
+    if(err){
+      console.error('Database error',err);
+      return res.status(500).json({ error: 'Database error', details: err });
+    }
+    
+    res.json(results);
+  });
+});
+
+
+//Update Appointment Status (Confirm, Cancel, Complete)
+app.put('/appointments/:id/status', (req, res) => {
+  const { status } = req.body;
+  const q = `UPDATE appointments SET status = ? WHERE id = ?`;
+
+  db.query(q, [status, req.params.id], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: 'Status updated successfully' });
+  });
+});
+
+//Get Appointment by ID
+app.get('/appointments/:id', (req, res) => {
+  const id = req.params.id;
+  const q = `
+    SELECT 
+      a.id,
+      a.appointment_date,
+      a.status,
+      u.name AS patientName,
+      p.contact,
+      p.age,
+      p.medical_history
+    FROM appointments a
+    JOIN users u ON a.patient_id = u.id
+    JOIN patient_details p ON a.patient_id = p.user_id
+    WHERE a.id = ?
+  `;
+
+  db.query(q, [id], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error', details: err });
+    if (results.length === 0) return res.status(404).json({ error: 'Appointment not found' });
+    res.json(results[0]);
+  });
+});
+
+//Reschedule Appointment
+app.put('/appointments/:id/reschedule', (req, res) => {
+  const id = req.params.id;
+  const { newDate } = req.body;
+
+  const q = `
+    UPDATE appointments 
+    SET appointment_date = ? 
+    WHERE appointment_id = ?
+  `;
+
+  db.query(q, [newDate, id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Database error', details: err });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Appointment not found' });
+    res.json({ message: 'Appointment rescheduled successfully' });
+  });
+});
+
+// GET All Patient History
+app.get('/patient-history', (req, res) => {
+  const q = `
+    SELECT 
+      u.name AS patient_name,
+      pd.age,
+      pd.gender,
+      pd.medical_history,
+      pd.hypertension,
+      pd.heart_disease,
+      pd.smoking_history,
+      pd.bmi,
+      pd.hba1c_level,
+      pd.blood_glucose_level,
+      pd.diabetes,
+      pr.prescribed_date,
+      pr.notes
+    FROM prescriptions pr
+    JOIN users u ON pr.patient_id = u.id
+    JOIN patient_details pd ON pr.patient_id = pd.user_id
+    ORDER BY pr.prescribed_date DESC
+  `;
+
+  db.query(q, (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: 'Database error', details: err });
+    }
+
+    res.json(results);
+  });
+});
+
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

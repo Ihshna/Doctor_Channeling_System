@@ -18,6 +18,7 @@ import SystemReport from './admin/SystemReport';
 //Doctor
 import DoctorLayout from './doctor/DoctorLayout';
 import DoctorDashboard from './doctor/DoctorDashboard';
+import DoctorAppointments from './doctor/DoctorAppointments';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
 
         <Route path="/doctor-dashboard" element={<DoctorLayout/>} >
           <Route index element={<DoctorDashboard/>} />
+          <Route path="appointments" element={<DoctorAppointments />} />
         </Route>
 
 

@@ -48,7 +48,6 @@ const DoctorSidebar = () => {
           </button>
           {openPatients && (
             <ul className="nav flex-column ms-3 fade-in">
-              <li><Link to="/doctor-dashboard/patients/list" className="nav-link">My Patients</Link></li>
               <li><Link to="/doctor-dashboard/patients/history" className="nav-link">Patient History</Link></li>
             </ul>
           )}
@@ -67,23 +66,11 @@ const DoctorSidebar = () => {
           )}
         </li>
 
-        {/* Medical Reports */}
-        <li className="nav-item">
-          <button className="nav-link btn btn-link text-start w-100" onClick={() => setOpenReports(!openReports)}>
-            <FaFileMedical className="me-2" /> Medical Reports
-          </button>
-          {openReports && (
-            <ul className="nav flex-column ms-3 fade-in">
-              <li><Link to="/doctor-dashboard/reports" className="nav-link">View Reports</Link></li>
-              <li><Link to="/doctor-dashboard/reports/upload" className="nav-link">Upload Report</Link></li>
-            </ul>
-          )}
-        </li>
 
         {/* Profile Settings */}
         <li className="nav-item">
           <Link to="/doctor-dashboard/settings" className="nav-link">
-            <FaUserCog className="me-2" /> Profile Settings
+            <FaUserCog className="me-2" /> Medical recommendation
           </Link>
         </li>
 
