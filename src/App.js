@@ -23,6 +23,9 @@ import PatientHistory from './doctor/PatientHistory';
 import WritePrescription from './doctor/WritePrescription';
 import DoctorRecommendations from './doctor/DoctorRecommendations';
 
+//Super admin
+import SuperAdminLayout from './superAdmin/SuperAdminLayout';
+
 function App() {
   return (
     <BrowserRouter>
@@ -47,6 +50,10 @@ function App() {
           <Route path="patients/history" element={<PatientHistory />} />
           <Route path="prescriptions/patients" element={<WritePrescription />} />
           <Route path="recommendations" element={<DoctorRecommendations />} />
+        </Route>
+
+        <Route path="/superadmin-dashboard" element={<SuperAdminLayout/>} >
+        
         </Route>
 
 
