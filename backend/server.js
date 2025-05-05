@@ -123,7 +123,7 @@ app.get('/admin/dashboard-stats', (req, res) => {
   const userQuery = "SELECT COUNT(*) AS totalUsers FROM users";
   const doctorQuery = "SELECT COUNT(*) AS totalDoctors FROM users WHERE role = 'Doctor'";
   const appointmentQuery = "SELECT COUNT(*) AS totalAppointments FROM appointments";
-  const predictionQuery = "SELECT COUNT(*) AS totalPredictions FROM predictions";
+  
 
   db.query(userQuery, (err, userResult) => {
     if (err) return res.status(500).json(err);
@@ -137,16 +137,12 @@ app.get('/admin/dashboard-stats', (req, res) => {
         if (err) return res.status(500).json(err);
         stats.appointments = appointmentResult[0].totalAppointments;
 
-        db.query(predictionQuery, (err, predictionResult) => {
-          if (err) return res.status(500).json(err);
-          stats.predictions = predictionResult[0].totalPredictions;
-
           res.json(stats);
         });
       });
     });
   });
-});
+
 
 //Fetch appointments
 app.get('/admin/monthly-appointments', (req, res) => {
@@ -507,8 +503,56 @@ app.get('/api/system-report', (req, res) => {
   });
 });
 
+// Doctor Dashboard Endpoint
+app.get('/doctor-dashboard-summary', (req, res) => {
+  const summary = {
+    todaysAppointments: 0,
+    upcomingAppointments: 0,
+    patientQueue: 0
+  };
 
+  const today = new Date().toISOString().slice(0, 10);
 
+  const q1 = `SELECT COUNT(*) AS count FROM appointments WHERE appointment_date = ?`;
+  const q2 = `SELECT COUNT(*) AS count FROM appointments WHERE appointment_date > ?`;
+  const q3 = `SELECT COUNT(*) AS count FROM appointments WHERE status = 'Pending'`;
+
+  db.query(q1, [today], (err, result1) => {
+    if (err) return res.status(500).json(err);
+    summary.todaysAppointments = result1[0].count;
+
+    db.query(q2, [today], (err, result2) => {
+      if (err) return res.status(500).json(err);
+      summary.upcomingAppointments = result2[0].count;
+
+      db.query(q3, (err, result3) => {
+        if (err) return res.status(500).json(err);
+        summary.patientQueue = result3[0].count;
+
+        res.json(summary);
+      });
+    });
+  });
+});
+
+//Calendar
+app.get('/appointments-calendar', (req, res) => {
+  const q = `
+    SELECT appointments.appointment_date, patient_details.user_id AS patientName
+    FROM appointments
+    JOIN patient_details ON appointments.patient_id = patient_details.patient_id
+    WHERE appointments.status = 'Pending'
+  `;
+  
+  db.query(q, (err, rows) => {
+    if (err) {
+      console.error('Error fetching appointments:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    res.json(rows);
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

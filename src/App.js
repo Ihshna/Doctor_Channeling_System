@@ -17,6 +17,7 @@ import SystemReport from './admin/SystemReport';
 
 //Doctor
 import DoctorLayout from './doctor/DoctorLayout';
+import DoctorDashboard from './doctor/DoctorDashboard';
 
 function App() {
   return (
@@ -37,7 +38,7 @@ function App() {
         </Route>
 
         <Route path="/doctor-dashboard" element={<DoctorLayout/>} >
-        
+          <Route index element={<DoctorDashboard/>} />
         </Route>
 
 

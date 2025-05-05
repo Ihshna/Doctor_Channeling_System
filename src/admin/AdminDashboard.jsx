@@ -96,18 +96,6 @@ function AdminDashboard() {
             </div>
           </div>
         </div>
-
-        <div className="col-md-3">
-          <div className="card dashboard-card hover-zoom">
-            <div className="icon-box bg-danger">
-              <FaHeartbeat />
-            </div>
-            <div>
-              <p>Predictions</p>
-              <h4>{stats.predictions}</h4>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Charts Section */}
