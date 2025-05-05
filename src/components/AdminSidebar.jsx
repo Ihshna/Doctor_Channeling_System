@@ -7,7 +7,6 @@ import {
   FaUsers,
   FaCalendarCheck,
   FaChartBar,
-  FaCog,
   FaSignOutAlt,
   FaClipboardList
 } from "react-icons/fa";

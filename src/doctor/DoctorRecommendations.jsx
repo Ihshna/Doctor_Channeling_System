@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  Table, Button, Modal, Form, Container, Row, Col, Badge,
+  Table, Button, Modal, Form, Container, Row, Col,
 } from 'react-bootstrap';
 
 const DoctorRecommendations = () => {

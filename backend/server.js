@@ -18,7 +18,8 @@ const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '',
-  database: 'mediconnect'
+  database: 'mediconnect',
+  multipleStatements:true
 });
 
 db.connect((err) => {
@@ -112,6 +113,54 @@ app.post('/login', (req, res) => {
         name: user.name
       }
     });
+  });
+});
+
+// GET dashboard stats -Super admin
+app.get('/superadmin/dashboard-stats', (req, res) => {
+  const totalAdminsQuery = "SELECT COUNT(*) AS total FROM users WHERE role = 'Admin'";
+  const approvedAdminsQuery = "SELECT COUNT(*) AS approved FROM users WHERE role = 'Admin' AND status = 'approved'";
+  const pendingAdminsQuery = "SELECT COUNT(*) AS pending FROM users WHERE role = 'Admin' AND status = 'pending'";
+
+  db.query(`${totalAdminsQuery}; ${approvedAdminsQuery}; ${pendingAdminsQuery}`, (err, results) => {
+    if (err) {
+      console.error("Dashboard stats error:", err);
+      return res.status(500).json({ message: "Failed to fetch stats" });
+    }
+
+    res.json({
+      total: results[0][0].total,
+      approved: results[1][0].approved,
+      pending: results[2][0].pending
+    });
+  });
+});
+
+//Fetch approved admins
+app.get('/superadmin/approved-admins', (req, res) => {
+  const sql = "SELECT id, name, email, role, status FROM users WHERE role = 'Admin' AND status = 'approved'";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching admins:", err);
+      return res.status(500).json({ message: "Server error" });
+    }
+    res.json(results);
+  });
+});
+
+//Delete approved admin
+app.delete('/superadmin/delete-admin/:id', (req, res) => {
+  const id = req.params.id;
+  const sql = "DELETE FROM users WHERE id = ? AND role = 'Admin'";
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("Error deleting admin:", err);
+      return res.status(500).json({ message: "Server error" });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+    res.json({ message: "Admin deleted successfully" });
   });
 });
 

@@ -5,7 +5,6 @@ import {
   FaCalendarCheck,
   FaUsers,
   FaFilePrescription,
-  FaFileMedical,
   FaUserCog,
   FaSignOutAlt
 } from "react-icons/fa";

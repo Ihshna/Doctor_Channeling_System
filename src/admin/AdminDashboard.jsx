@@ -3,7 +3,6 @@ import {
   FaUserMd,
   FaUsers,
   FaCalendarCheck,
-  FaHeartbeat,
   FaChartBar,
   FaClipboardList
 } from 'react-icons/fa';
