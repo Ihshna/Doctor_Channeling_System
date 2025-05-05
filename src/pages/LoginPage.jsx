@@ -47,8 +47,11 @@ function LoginPage() {
         const user = response.data.user;
 
         // Doctor with pending status
-        if (user.role === 'Doctor' && user.status !== 'approved') {
-          setError('Your account is awaiting admin approval.');
+        if (
+          (user.role === 'Doctor' && user.status !== 'approved') ||
+          (user.role === 'Admin' && user.status !== 'approved')
+        ) {
+          setError(`Your account is awaiting ${user.role === 'Admin' ? 'super admin' : 'admin'} approval.`);
           return;
         }
 
@@ -64,7 +67,9 @@ function LoginPage() {
             navigate('/doctor-dashboard');
           } else if (user.role === 'Admin') {
             navigate('/admin-dashboard');
-          } else {
+          } else if (user.role === 'Super Admin') {
+            navigate('/superadmin-dashboard');
+          }else {
             navigate('/');
           }
         }, 1500);

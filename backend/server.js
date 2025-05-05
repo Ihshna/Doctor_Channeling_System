@@ -46,26 +46,26 @@ app.post('/feedback', (req, res) => {
   });
 });
 
-
-// Register
 app.post('/register', async (req, res) => {
   const { name, email, password, role } = req.body;
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const status = role === 'Doctor' ? 'pending' : 'approved';
-    const sql = 'INSERT INTO users (name, email, password, role,status) VALUES (?, ?, ?, ?,?)';
+    let status = 'approved';
+    if (role === 'Doctor' || role === 'Admin') status = 'pending';
+
+    const sql = 'INSERT INTO users (name, email, password, role, status) VALUES (?, ?, ?, ?, ?)';
     db.query(sql, [name, email, hashedPassword, role, status], (err, result) => {
       if (err) {
         console.error('Error during registration:', err);
-        res.status(500).json({ message: 'Registration failed.' });
-      } else {
-        const msg =
-          role === 'Doctor'
-            ? 'Registered successfully. Awaiting admin approval.'
-            : 'Registered successfully!';
-        res.status(200).json({ message: msg });
+        return res.status(500).json({ message: 'Registration failed.' });
       }
+
+      let msg = 'Registered successfully!';
+      if (role === 'Doctor') msg = 'Registered successfully. Awaiting admin approval.';
+      if (role === 'Admin') msg = 'Registered successfully. Awaiting super admin approval.';
+
+      res.status(200).json({ message: msg });
     });
   } catch (error) {
     console.error('Error hashing password:', error);
@@ -73,7 +73,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
-//Login
+// Updated Login
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
@@ -81,39 +81,66 @@ app.post('/login', (req, res) => {
   db.query(sql, [email], async (err, result) => {
     if (err) {
       console.error('Error during login:', err);
-      res.status(500).json({ message: 'Login failed.' });
-    } else {
-      if (result.length > 0) {
-        const user = result[0];
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) return res.status(401).json({ message: 'Invalid credentials.' });
-
-        // CHECK DOCTOR APPROVAL
-        if (user.role === "Doctor" && user.status !== "approved") {
-          return res.status(401).json({ message: "Account awaiting admin approval." });
-        }
-
-        res.status(200).json({
-          message: 'Login successful!',
-          user: {
-            role: user.role,
-            id: user.id,
-            status: user.status,
-            email: user.email,
-            name: user.name
-
-          }
-
-
-        });
-      } else {
-        res.status(401).json({ message: 'Invalid credentials.' });
-      }
+      return res.status(500).json({ message: 'Login failed.' });
     }
+
+    if (result.length === 0) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    const user = result[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    // Doctor pending approval
+    if (user.role === 'Doctor' || user.role === "Admin" && user.status !== 'approved') {
+      return res.status(401).json({ message: 'Account awaiting admin approval.' });
+    }
+
+    
+
+    res.status(200).json({
+      message: 'Login successful!',
+      user: {
+        role: user.role,
+        id: user.id,
+        status: user.status,
+        email: user.email,
+        name: user.name
+      }
+    });
   });
 });
 
+// Super Admin: View Pending Admins
+app.get('/pending-admins', (req, res) => {
+  const sql = 'SELECT id, name, email FROM users WHERE role = "Admin" AND status = "pending"';
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: 'Failed to fetch pending admins.' });
+    res.json(results);
+  });
+});
+
+// Super Admin: Approve Admin
+app.post('/approve-admin/:id', (req, res) => {
+  const sql = 'UPDATE users SET status = "approved" WHERE id = ?';
+  db.query(sql, [req.params.id], (err, result) => {
+    if (err) return res.status(500).json({ message: 'Failed to approve admin.' });
+    res.json({ message: 'Admin approved successfully.' });
+  });
+});
+
+// Super Admin: Reject Admin
+app.post('/reject-admin/:id', (req, res) => {
+  const sql = 'UPDATE users SET status = "rejected" WHERE id = ?';
+  db.query(sql, [req.params.id], (err, result) => {
+    if (err) return res.status(500).json({ message: 'Failed to reject admin.' });
+    res.json({ message: 'Admin rejected successfully.' });
+  });
+});
 
 
 // Get dashboard stats

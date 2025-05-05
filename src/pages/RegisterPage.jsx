@@ -66,7 +66,17 @@ function RegisterPage() {
           confirmPassword: '',
           role: '',
         });
-      } else {
+      } 
+      else if(role.toLowerCase() === 'admin'){
+        setSuccess('Registration successful! Please wait for super admin approval.');
+        setRegisterData({
+          name: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          role: '',
+        });
+      } else{
         setSuccess('Registration successful! Redirecting to login...');
         setTimeout(() => {
           navigate('/login');
@@ -76,6 +86,8 @@ function RegisterPage() {
       console.error('Registration Error:', error);
       setError(error.response?.data?.message || 'Registration failed. Please try again.');
     }
+
+    
   };
 
   return (
@@ -159,6 +171,7 @@ function RegisterPage() {
               <option value="Patient">Patient</option>
               <option value="Doctor">Doctor</option>
               <option value="Admin">Admin</option>
+              <option value="Super Admin">Super Admin</option>
             </select>
           </div>
 
