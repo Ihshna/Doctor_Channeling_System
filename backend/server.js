@@ -206,7 +206,24 @@ app.post('/add-admin', async (req, res) => {
   });
 });
 
+// Get all pending admins
+app.get('/pending-admins', (req, res) => {
+  const sql = "SELECT id, name, email, role, status FROM users WHERE role = 'Admin' AND status = 'pending'";
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json({ message: 'Database error' });
+    res.json(result);
+  });
+});
 
+// Approve a pending admin
+app.post('/approve-admin', (req, res) => {
+  const { id } = req.body;
+  const sql = "UPDATE users SET status = 'approved' WHERE id = ?";
+  db.query(sql, [id], (err, result) => {
+    if (err) return res.status(500).json({ message: 'Error updating status' });
+    res.json({ message: 'Admin approved successfully' });
+  });
+});
 
 // Get dashboard stats
 app.get('/admin/dashboard-stats', (req, res) => {

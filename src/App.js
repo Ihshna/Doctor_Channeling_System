@@ -28,6 +28,7 @@ import SuperAdminLayout from './superAdmin/SuperAdminLayout';
 import SuperAdminDashboard from './superAdmin/SuperAdminDashboard';
 import AdminList from './superAdmin/AdminList';
 import AddAdminForm from './superAdmin/AddAdminForm';
+import PendingAdmins from './superAdmin/PendingAdmins';
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
           <Route index element={<SuperAdminDashboard/>} />
           <Route path="view-admins" element={<AdminList />} />
           <Route path="add-admin" element={<AddAdminForm />} />
+          <Route path="pending-admins" element={<PendingAdmins />} />
         </Route>
 
 
