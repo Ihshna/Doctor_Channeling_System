@@ -51,6 +51,7 @@ const PatientDashboard = ({ patientId=(48) }) => {
                 <div>
                   <p><strong>Weight:</strong> {lastHealthReading.weight} kg</p>
                   <p><strong>Blood Sugar:</strong> {lastHealthReading.blood_sugar} mg/dL</p>
+                  <p><strong>Blood Pressure:</strong>{lastHealthReading.blood_pressure}</p>
                   <p><strong>Date:</strong> {lastHealthReading.reading_date}</p>
                 </div>
               ) : (
