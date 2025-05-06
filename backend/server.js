@@ -981,7 +981,7 @@ app.put("/api/patient/:id/profile", (req, res) => {
   const patientId = req.params.id;
   const { name, email, contact, address, age, gender } = req.body;
 
-  // Update users and patient_details together
+  
   const updateUserQuery = `UPDATE users SET name = ?, email = ? WHERE id = ? AND role = 'patient'`;
   const updateDetailsQuery = `UPDATE patient_details SET contact = ?, address = ?, age = ?, gender = ? WHERE user_id = ?`;
 
@@ -1001,6 +1001,59 @@ app.put("/api/patient/:id/profile", (req, res) => {
     });
   });
 });
+
+//Get Medical History
+app.get("/api/patient/:id/medical-history", (req, res) => {
+  const patientId = req.params.id;
+
+  const query = `
+    SELECT medical_history, hypertension, heart_disease, smoking_history,
+           bmi, HbA1c_level, blood_glucose_level, diabetes
+    FROM patient_details
+    WHERE user_id = ?
+  `;
+
+  db.query(query, [patientId], (err, results) => {
+    if (err) {
+      console.error("Error fetching medical history:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Patient not found" });
+    }
+
+    res.json(results[0]);
+  });
+});
+
+//Update a single field
+app.put("/api/patient/:id/medical-history", (req, res) => {
+  const patientId = req.params.id;
+  const { field, value } = req.body;
+
+  const allowedFields = [
+    "medical_history", "hypertension", "heart_disease", "smoking_history",
+    "bmi", "HbA1c_level", "blood_glucose_level", "diabetes"
+  ];
+
+  if (!allowedFields.includes(field)) {
+    return res.status(400).json({ error: "Invalid field" });
+  }
+
+  const query = `UPDATE patient_details SET \`${field}\` = ? WHERE user_id = ?`;
+
+  db.query(query, [value, patientId], (err) => {
+    if (err) {
+      console.error("Error updating field:", err);
+      return res.status(500).json({ error: "Failed to update field" });
+    }
+
+    res.json({ message: `${field} updated successfully` });
+  });
+});
+
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

@@ -34,6 +34,7 @@ import PendingAdmins from './superAdmin/PendingAdmins';
 import PatientLayout from './patient/PatientLayout';
 import PatientDashboard from './patient/PatientDashboard';
 import UpdateProfile from './patient/UpdateProfile';
+import MedicalHistory from './patient/MedicalHistory';
 
 function App() {
   return (
@@ -71,6 +72,7 @@ function App() {
         <Route path="/patient-dashboard" element={<PatientLayout/>} >
           <Route index element={<PatientDashboard/>} />
           <Route path="profile" element={<UpdateProfile />} />
+          <Route path="medical-history" element={<MedicalHistory patientId={48} />} />
         </Route>
         
       </Routes>
