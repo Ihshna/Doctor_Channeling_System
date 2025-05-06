@@ -30,6 +30,9 @@ import AdminList from './superAdmin/AdminList';
 import AddAdminForm from './superAdmin/AddAdminForm';
 import PendingAdmins from './superAdmin/PendingAdmins';
 
+//Patient
+import PatientLayout from './patient/PatientLayout';
+
 function App() {
   return (
     <BrowserRouter>
@@ -63,7 +66,9 @@ function App() {
           <Route path="pending-admins" element={<PendingAdmins />} />
         </Route>
 
-
+        <Route path="/patient-dashboard" element={<PatientLayout/>} >
+          
+        </Route>
         
       </Routes>
     </BrowserRouter>
