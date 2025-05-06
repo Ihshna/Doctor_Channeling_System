@@ -923,6 +923,33 @@ app.get('/api/recommendations', (req, res) => {
   });
 });
 
+// Patient Dashboard API
+app.get("/api/patient-dashboard/:patientId", (req, res) => {
+  const patientId = req.params.patientId;
+
+  const query = `
+    SELECT COUNT(*) AS total_appointments FROM appointments WHERE patient_id = ?;
+    SELECT * FROM health_readings WHERE patient_id = ? ORDER BY reading_date DESC LIMIT 1;
+    SELECT * FROM appointments WHERE patient_id = ? AND appointment_date >= CURDATE() ORDER BY appointment_date ASC LIMIT 1;
+  `;
+
+  db.query(query, [patientId, patientId, patientId], (err, results) => {
+    if (err) {
+      console.error("Dashboard query error:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+
+    const totalAppointments = results[0][0].total_appointments;
+    const lastHealthReading = results[1][0] || null;
+    const nextAppointment = results[2][0] || null;
+
+    res.json({
+      totalAppointments,
+      lastHealthReading,
+      nextAppointment
+    });
+  });
+});
 
 
 app.listen(PORT, () => {

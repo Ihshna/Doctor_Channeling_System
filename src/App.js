@@ -32,6 +32,7 @@ import PendingAdmins from './superAdmin/PendingAdmins';
 
 //Patient
 import PatientLayout from './patient/PatientLayout';
+import PatientDashboard from './patient/PatientDashboard';
 
 function App() {
   return (
@@ -67,7 +68,7 @@ function App() {
         </Route>
 
         <Route path="/patient-dashboard" element={<PatientLayout/>} >
-          
+          <Route index element={<PatientDashboard/>} />
         </Route>
         
       </Routes>
