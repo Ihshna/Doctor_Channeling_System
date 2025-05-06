@@ -1053,7 +1053,33 @@ app.put("/api/patient/:id/medical-history", (req, res) => {
   });
 });
 
+// Add New Health Reading
+app.post("/api/health-readings", (req, res) => {
+  const { patient_id, reading_date, blood_sugar, weight, blood_pressure, notes } = req.body;
 
+  if (!patient_id || !reading_date) {
+    return res.status(400).json({ error: "Patient ID and Reading Date are required." });
+  }
+
+  const query = `
+    INSERT INTO health_readings 
+    (patient_id, reading_date, blood_sugar, weight, blood_pressure, notes) 
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    query,
+    [patient_id, reading_date, blood_sugar, weight, blood_pressure, notes],
+    (err, result) => {
+      if (err) {
+        console.error("Error inserting health reading:", err);
+        return res.status(500).json({ error: "Failed to save reading" });
+      }
+
+      res.status(201).json({ message: "Health reading added successfully" });
+    }
+  );
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
