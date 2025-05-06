@@ -1081,6 +1081,27 @@ app.post("/api/health-readings", (req, res) => {
   );
 });
 
+// Get reading history for a patient
+app.get("/api/patient/:id/health-readings", (req, res) => {
+  const patientId = req.params.id;
+
+  const query = `
+    SELECT id, reading_date, blood_sugar, weight, blood_pressure, notes 
+    FROM health_readings 
+    WHERE patient_id = ? 
+    ORDER BY reading_date DESC
+  `;
+
+  db.query(query, [patientId], (err, results) => {
+    if (err) {
+      console.error("Error fetching reading history:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+
+    res.json(results);
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

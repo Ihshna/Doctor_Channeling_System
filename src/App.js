@@ -36,6 +36,7 @@ import PatientDashboard from './patient/PatientDashboard';
 import UpdateProfile from './patient/UpdateProfile';
 import MedicalHistory from './patient/MedicalHistory';
 import EnterReading from './patient/EnterReading';
+import HealthReadingHistory from './patient/HealthReadingHistory';
 
 function App() {
   return (
@@ -75,6 +76,7 @@ function App() {
           <Route path="profile" element={<UpdateProfile />} />
           <Route path="medical-history" element={<MedicalHistory patientId={48} />} />
           <Route path="health-readings/new" element={<EnterReading patientId={48} />} />
+          <Route path="health-readings/history" element={<HealthReadingHistory patientId={48} />} />
         </Route>
         
       </Routes>

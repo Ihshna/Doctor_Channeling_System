@@ -56,7 +56,7 @@ const PatientSidebar = () => {
           {openHealth && (
             <ul className="nav flex-column ms-3 fade-in">
               <li><Link to="/patient-dashboard/health-readings/new" className="nav-link">Enter New Reading</Link></li>
-              <li><Link to="/patient/health-readings/history" className="nav-link">Reading History</Link></li>
+              <li><Link to="/patient-dashboard/health-readings/history" className="nav-link">Reading History</Link></li>
               <li><Link to="/patient/health-readings/trends" className="nav-link">Charts & Trends</Link></li>
             </ul>
           )}
