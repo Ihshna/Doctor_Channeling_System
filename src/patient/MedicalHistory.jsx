@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaEdit, FaTrash, FaSave, FaTimes } from "react-icons/fa";
+import { FaEdit, FaSave, FaTimes } from "react-icons/fa";
 
 const fieldLabels = {
   medical_history: "Medical History",
