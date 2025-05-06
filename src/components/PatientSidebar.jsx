@@ -63,7 +63,7 @@ const PatientSidebar = () => {
         </li>
 
         <li className="nav-item">
-          <Link to="/patient/predictive-suggestions" className="nav-link">
+          <Link to="/patient-dashboard/predictive-suggestions" className="nav-link">
             <FaLightbulb className="me-2" /> Predictive Suggestions
           </Link>
         </li>

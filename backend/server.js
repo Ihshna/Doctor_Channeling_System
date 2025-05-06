@@ -7,6 +7,8 @@ const bcrypt = require('bcrypt');
 const PDFDocument = require("pdfkit");
 const fs=require("fs");
 const path=require("path");
+const { Parser } = require("json2csv");
+const axios=require('axios');
 
 const app = express();
 const PORT = 5000;
@@ -1168,6 +1170,143 @@ app.get("/api/patient/:id/health-trends/pdf", (req, res) => {
     });
   });
 });
+
+//Export patient data to csv file for predictions
+app.get("/api/export-patient-data", (req, res) => {
+  const query = `
+    SELECT 
+      u.id AS patient_id,
+      u.name, u.email,
+      pd.age, pd.gender, pd.bmi, pd.hypertension, pd.heart_disease,
+      pd.smoking_history, pd.HbA1c_level, pd.blood_glucose_level, pd.diabetes,
+      hr.blood_sugar, hr.weight, hr.blood_pressure, hr.reading_date
+    FROM users u
+    JOIN patient_details pd ON u.id = pd.user_id
+    LEFT JOIN (
+      SELECT patient_id, MAX(reading_date) as latest_date
+      FROM health_readings
+      GROUP BY patient_id
+    ) latest ON latest.patient_id = u.id
+    LEFT JOIN health_readings hr 
+      ON hr.patient_id = u.id AND hr.reading_date = latest.latest_date
+    WHERE u.role = 'patient'
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching patient data:", err);
+      return res.status(500).json({ error: "Failed to fetch data" });
+    }
+
+    try {
+      const json2csv = new Parser();
+      const csv = json2csv.parse(results);
+
+      const filePath = "exported_patient_health_data.csv";
+      fs.writeFileSync(filePath, csv);
+
+      res.download(filePath, (err) => {
+        if (err) {
+          console.error("Error sending file:", err);
+        } else {
+          fs.unlinkSync(filePath); // Delete file after download
+        }
+      });
+    } catch (parseErr) {
+      console.error("Error converting to CSV:", parseErr);
+      res.status(500).json({ error: "CSV conversion error" });
+    }
+  });
+});
+
+// Predictive Suggestion Endpoint
+app.post('/api/predictive-suggestions/:patientId', (req, res) => {
+  const patientId = req.params.patientId;
+
+  //Fetch patient data and latest health reading
+  const query = `
+    SELECT 
+      u.id AS patient_id,
+      u.name,
+      p.age,
+      p.gender,
+      p.medical_history,
+      p.hypertension,
+      p.heart_disease,
+      p.bmi,
+      p.HbA1c_level,
+      p.blood_glucose_level,
+      hr.blood_sugar,
+      hr.weight
+    FROM users u
+    JOIN patient_details p ON u.id = p.user_id
+    JOIN health_readings hr ON hr.patient_id = u.id
+    WHERE u.id = ?
+    ORDER BY hr.reading_date DESC
+    LIMIT 1
+  `;
+
+  db.query(query, [patientId], async (err, results) => {
+    if (err || results.length === 0) {
+      console.error("Error fetching patient data:", err);
+      return res.status(500).json({ error: "Patient data not found or DB error" });
+    }
+
+    const data = results[0];
+
+    //Format request for Flask ML model
+    const payload = {
+      age: data.age,
+      gender: data.gender.toLowerCase(),
+      bmi: data.bmi,
+      hypertension: data.hypertension,
+      heart_disease: data.heart_disease,
+      HbA1c_level: data.HbA1c_level,
+      blood_glucose_level: data.blood_glucose_level,
+      blood_sugar: data.blood_sugar,
+      weight: data.weight
+    };
+
+    try {
+      // Send to Python model via Flask API
+      console.log("Payload being sent to Flask:".payload);
+      const response = await axios.post('http://127.0.0.1:5000/predict', payload);
+
+      const { risk, suggestion } = response.data;
+
+      //Store prediction in DB
+      const insertQuery = `
+        INSERT INTO predictive_suggestions 
+        (patient_id, risk_level, diet_plan, exercise_plan, lifestyle_tips) 
+        VALUES (?, ?, ?, ?, ?)
+      `;
+
+      db.query(insertQuery, [
+        patientId,
+        risk,
+        suggestion.diet,
+        suggestion.exercise,
+        suggestion.lifestyle
+      ], (insertErr) => {
+        if (insertErr) {
+          console.error("Insert Error:", insertErr);
+          return res.status(500).json({ error: "Failed to save prediction" });
+        }
+
+        res.json({
+          message: "Predictive suggestion generated successfully",
+          risk,
+          suggestion
+        });
+      });
+
+    } catch (error) {
+      console.error("Flask API Error:", error.message);
+      res.status(500).json({ error: "Prediction service failed" });
+    }
+  });
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

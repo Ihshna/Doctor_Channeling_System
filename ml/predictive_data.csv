@@ -1,0 +1,9 @@
+"patient_id","name","email","age","gender","bmi","hypertension","heart_disease","smoking_history","HbA1c_level","blood_glucose_level","diabetes","blood_sugar","weight","blood_pressure","reading_date"
+48,"Nuwan","nuwan123@gmail.com",45,"Male",33.64,1,0,"Current",4.8,150,"Yes",135,80,"120/80","2025-05-06T07:00:00.000Z"
+1,"Maha","maha123@gmail.com",26,"Female",34.7,0,0,"Never",66.7,67,"No",,,,
+32,"Mahdhi","mahdhi123@gmail.com",45,"Male",25.7,1,0,"Often",66.7,90,"Yes",,,,
+36,"Dhilini","dhilini123@gmail.com",80,"Female",25.19,0,1,"Never",6.6,140,"0",,,,
+37,"Thehare","thehara123@gmail.com",54,"Female",27.32,0,0,"No info",6.6,80,"No",,,,
+38,"Thisara","thisara123@gmail.com",28,"Male",27.32,0,0,"Never",5.7,158,"No",,,,
+39,"Fathima","fathima123@gmail.com",35,"Female",20.14,0,0,"Current",5,155,"No",,,,
+40,"Krishnanth","kajan123@gmail.com",76,"Male",33.64,1,1,"Current",4.8,145,"Yes",,,,
