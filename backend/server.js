@@ -951,6 +951,56 @@ app.get("/api/patient-dashboard/:patientId", (req, res) => {
   });
 });
 
+// Get patient profile
+app.get("/api/patient/:id/profile", (req, res) => {
+  const patientId = req.params.id;
+
+  const query = `
+    SELECT u.name, u.email, pd.contact, pd.address, pd.age, pd.gender
+    FROM users u
+    LEFT JOIN patient_details pd ON u.id = pd.user_id
+    WHERE u.id = ? AND u.role = 'patient'
+  `;
+
+  db.query(query, [patientId], (err, results) => {
+    if (err) {
+      console.error("Error fetching profile:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Patient not found" });
+    }
+
+    res.json(results[0]);
+  });
+});
+
+// Update patient profile
+app.put("/api/patient/:id/profile", (req, res) => {
+  const patientId = req.params.id;
+  const { name, email, contact, address, age, gender } = req.body;
+
+  // Update users and patient_details together
+  const updateUserQuery = `UPDATE users SET name = ?, email = ? WHERE id = ? AND role = 'patient'`;
+  const updateDetailsQuery = `UPDATE patient_details SET contact = ?, address = ?, age = ?, gender = ? WHERE user_id = ?`;
+
+  db.query(updateUserQuery, [name, email, patientId], (err1) => {
+    if (err1) {
+      console.error("Error updating user:", err1);
+      return res.status(500).json({ error: "Failed to update user" });
+    }
+
+    db.query(updateDetailsQuery, [contact, address, age, gender, patientId], (err2) => {
+      if (err2) {
+        console.error("Error updating details:", err2);
+        return res.status(500).json({ error: "Failed to update patient details" });
+      }
+
+      res.json({ message: "Profile updated successfully" });
+    });
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
