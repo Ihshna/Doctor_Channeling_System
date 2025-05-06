@@ -4,7 +4,9 @@ const mysql = require('mysql');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
-
+const PDFDocument = require("pdfkit");
+const fs=require("fs");
+const path=require("path");
 
 const app = express();
 const PORT = 5000;
@@ -1099,6 +1101,71 @@ app.get("/api/patient/:id/health-readings", (req, res) => {
     }
 
     res.json(results);
+  });
+});
+
+// Fetch health-trend data
+app.get("/api/patient/:id/health-trends", (req, res) => {
+  const patientId = req.params.id;
+  const query = `
+    SELECT reading_date, blood_sugar, weight, blood_pressure 
+    FROM health_readings 
+    WHERE patient_id = ? 
+    ORDER BY reading_date ASC
+  `;
+
+  db.query(query, [patientId], (err, results) => {
+    if (err) {
+      console.error("Error fetching trends:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+
+    res.json(results);
+  });
+});
+
+// Download trends PDF
+app.get("/api/patient/:id/health-trends/pdf", (req, res) => {
+  const patientId = req.params.id;
+  const query = `
+    SELECT reading_date, blood_sugar, weight, blood_pressure 
+    FROM health_readings 
+    WHERE patient_id = ? 
+    ORDER BY reading_date ASC
+  `;
+
+  db.query(query, [patientId], (err, data) => {
+    if (err) {
+      console.error("PDF generation error:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+
+    // Create a PDF document
+    const doc = new PDFDocument();
+    const filePath = path.join(__dirname, `health_trends_${patientId}.pdf`);
+    const stream = fs.createWriteStream(filePath);
+
+    doc.pipe(stream);
+
+    doc.fontSize(18).text("Health Trends Report", { align: "center" });
+    doc.moveDown();
+
+    data.forEach((item, index) => {
+      doc
+        .fontSize(12)
+        .text(
+          `${index + 1}. Date: ${item.reading_date} | Blood Sugar: ${item.blood_sugar} | Weight: ${item.weight} | Blood Pressure: ${item.blood_pressure}`
+        );
+    });
+
+    doc.end();
+
+    stream.on("finish", () => {
+      res.download(filePath, `health_trends_${patientId}.pdf`, (err) => {
+        if (err) console.error("Download error:", err);
+        fs.unlinkSync(filePath);
+      });
+    });
   });
 });
 
