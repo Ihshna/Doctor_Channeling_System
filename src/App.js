@@ -39,6 +39,7 @@ import EnterReading from './patient/EnterReading';
 import HealthReadingHistory from './patient/HealthReadingHistory';
 import HealthTrends from './patient/HealthTrends';
 import PredictiveSuggestions from './patient/PredictiveSuggestions';
+import BrowseDoctors from './patient/BrowseDoctors';
 
 function App() {
   return (
@@ -81,6 +82,7 @@ function App() {
           <Route path="health-readings/history" element={<HealthReadingHistory patientId={48} />} />
           <Route path="health-readings/trends" element={<HealthTrends patientId={48} />} />
           <Route path="predictive-suggestions" element={<PredictiveSuggestions />} />
+          <Route path="doctors" element={<BrowseDoctors />} />
 
         </Route>
         

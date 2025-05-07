@@ -1307,6 +1307,81 @@ app.post('/api/predictive-suggestions/:patientId', (req, res) => {
   });
 });
 
+/// Get all doctors with booking info for a specific patient
+app.get('/api/doctors/details/:patientId', (req, res) => {
+  const patientId = req.params.patientId;
+
+  const query = `
+    SELECT 
+      d.id AS doctor_id,
+      d.name,
+      d.specialization,
+      d.contact,
+      d.availability,
+      u.email,
+      a.id AS appointment_id,
+      a.status,
+      a.appointment_date,
+      a.mode
+    FROM doctors d
+    JOIN users u ON d.user_id = u.id
+    LEFT JOIN appointments a 
+      ON a.doctor_id = d.id AND a.patient_id = ? AND a.status = 'Pending'
+    WHERE u.role = 'Doctor' AND u.status = 'approved'
+  `;
+
+  db.query(query, [patientId], (err, results) => {
+    if (err) {
+      console.error("Error fetching doctors:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    res.json(results);
+  });
+});
+
+// Book an appointment
+app.post('/api/appointments/booking', (req, res) => {
+  const { patient_id, doctor_id, appointment_date, mode } = req.body;
+
+  if (!patient_id || !doctor_id || !appointment_date || !mode) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  const query = `
+    INSERT INTO appointments (patient_id, doctor_id, appointment_date, status, mode)
+    VALUES (?, ?, ?, 'Pending',?)
+  `;
+
+  db.query(query, [patient_id, doctor_id, appointment_date, mode], (err, result) => {
+    if (err) {
+      console.error("Error booking appointment:", err);
+      return res.status(500).json({ error: "Failed to book appointment" });
+    }
+
+    res.json({ message: "Appointment booked successfully", appointmentId: result.insertId });
+  });
+});
+
+// Cancel appointment
+app.delete('/api/appointments/cancel/:id', (req, res) => {
+  const appointmentId = req.params.id;
+
+  const query = `DELETE FROM appointments WHERE id = ?`;
+
+  db.query(query, [appointmentId], (err, result) => {
+    if (err) {
+      console.error('Error deleting appointment:', err);
+      return res.status(500).json({ error: 'Failed to cancel appointment' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Appointment not found' });
+    }
+
+    res.json({ message: 'Appointment cancelled successfully' });
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
