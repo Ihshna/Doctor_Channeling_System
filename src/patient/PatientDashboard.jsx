@@ -82,7 +82,7 @@ const PatientDashboard = ({ patientId=(48) }) => {
       {/* Call to Action */}
       <div className="text-center mt-5">
         <h5>Need a consultation?</h5>
-        <Button variant="success" href="/patient/channel-doctor">
+        <Button variant="success" href="/patient-dashboard/doctors">
           Channel a Doctor
         </Button>
       </div>

@@ -1495,6 +1495,39 @@ app.get('/api/appointments/pending', (req, res) => {
   });
 });
 
+// Get prescription history for a patient
+app.get('/api/prescriptions/:patientId', (req, res) => {
+  const patientId = req.params.patientId;
+
+  const query = `
+    SELECT 
+      pr.id AS prescription_id,
+      pr.prescribed_date,
+      pr.notes,
+      d.name AS doctor_name,
+      d.specialization,
+      a.appointment_date
+    FROM prescriptions pr
+    JOIN doctors d ON pr.doctor_id = d.id
+    JOIN appointments a ON pr.appointment_id = a.id
+    WHERE pr.patient_id = ?
+    ORDER BY pr.prescribed_date DESC
+  `;
+
+  db.query(query, [patientId], (err, results) => {
+    if (err) {
+      console.error("Error fetching prescription history:", err);
+      return res.status(500).json({ error: "Failed to retrieve prescriptions" });
+    }
+
+    if (results.length === 0) {
+      return res.json({ message: "No prescriptions provided yet." });
+    }
+
+    res.json(results);
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

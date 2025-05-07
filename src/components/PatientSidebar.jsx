@@ -82,7 +82,7 @@ const PatientSidebar = () => {
         </li>
 
         <li className="nav-item">
-          <Link to="/patient/prescriptions" className="nav-link">
+          <Link to="/patient-dashboard/prescriptions" className="nav-link">
             <FaFileMedical className="me-2" /> Prescription History
           </Link>
         </li>
