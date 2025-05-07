@@ -103,7 +103,11 @@ app.post('/login', (req, res) => {
     }
 
     // Doctor pending approval
-    if (user.role === 'Doctor' || user.role === "Admin" && user.status !== 'approved') {
+    if (user.role === 'Doctor' && user.status !== 'approved') {
+      return res.status(401).json({ message: 'Account awaiting admin approval.' });
+    }
+
+    else if(user.role === "Admin" && user.status !== 'approved') {
       return res.status(401).json({ message: 'Account awaiting admin approval.' });
     }
 
@@ -1473,6 +1477,23 @@ app.get("/api/appointments/confirmed/:patientId", (req, res) => {
   });
 });
 
+//Fetch pending assignments
+app.get('/api/appointments/pending', (req, res) => {
+  const sql = `
+    SELECT 
+      a.id, a.patient_id, a.doctor_id, a.appointment_date, a.status, a.mode, a.payment_proof,
+      u.name AS patient_name, p.age, p.contact, p.medical_history
+    FROM appointments a
+    JOIN users u ON a.patient_id = u.id
+    JOIN patient_details p ON p.user_id = u.id
+    WHERE a.status = 'Pending'
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: "Failed to fetch appointments" });
+    res.json(results);
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

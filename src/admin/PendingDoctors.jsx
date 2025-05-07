@@ -12,7 +12,7 @@ const PendingDoctors = () => {
   const fetchPendingDoctors = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/admin/doctors/pending");
-      setPendingDoctors(res.data); // Set the pending doctors data
+      setPendingDoctors(res.data); 
     } catch (err) {
       console.error("Error fetching doctors:", err);
     }

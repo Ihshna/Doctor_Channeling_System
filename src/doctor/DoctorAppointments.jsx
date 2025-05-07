@@ -1,30 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Modal, Button, Card, Form } from "react-bootstrap";
 
 const DoctorAppointments = () => {
   const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [selectedId, setSelectedId] = useState(null);
-  const [newDate, setNewDate] = useState('');
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [successMessage,setSuccessMessage]= useState('');
   const [showSuccess,setShowSuccess]=useState(false);
+  const [consultationData, setConsultationData] = useState({
+    consultation_time: "",
+    location: "",
+    zoom_link: "",
+  });
+
+  const fetchAppointments = () => {
+    axios
+      .get("http://localhost:5000/api/appointments/pending")
+      .then((res) => setAppointments(res.data))
+      .catch((err) => console.error(err));
+  };
 
   useEffect(() => {
     fetchAppointments();
   }, []);
 
-  const fetchAppointments = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/appointments');
-      setAppointments(response.data);
-    } catch (err) {
-      setError('Failed to load appointments');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const handleViewSlip = (imageUrl) => {
+    window.open(`http://localhost:5000/${imageUrl}`, "_blank");
+  };
+
+  const handleOpenModal = (appointment) => {
+    setSelectedAppointment(appointment);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedAppointment(null);
+    setConsultationData({
+      consultation_time: "",
+      location: "",
+      zoom_link: "",
+    });
   };
 
   const updateStatus = async (id, status) => {
@@ -40,88 +57,107 @@ const DoctorAppointments = () => {
     }
   };
 
-  const handleReschedule = async () => {
-    try {
-      await axios.put(`http://localhost:5000/appointments/${selectedId}/reschedule`, { newDate });
-      setShowModal(false);
-      setNewDate('');
-      setSelectedId(null);
-      fetchAppointments();
-    } catch (err) {
-      console.error('Reschedule error:', err);
-    }
-  };
-
-  const openRescheduleModal = (id) => {
-    setSelectedId(id);
-    setShowModal(true);
+  const handleConfirmAppointment = () => {
+    const { consultation_time, location, zoom_link } = consultationData;
+    axios
+      .put(`http://localhost:5000/api/appointments/confirm/${selectedAppointment.id}`, {
+        consultation_time,
+        location,
+        zoom_link,
+      })
+      .then((res) => {
+        alert("Appointment confirmed successfully!");
+        handleCloseModal();
+        fetchAppointments();
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Failed to confirm appointment.");
+      });
   };
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">Pending Appointments</h2>
-      {showSuccess &&(
-        <div className="alert alert-success" role="alert">
-        {successMessage}
-        </div>
-      )}
+      <h3 className="mb-4 text-primary">Pending Appointments</h3>
+      {appointments.map((appt) => (
+        <Card key={appt.id} className="mb-3 shadow">
+          <Card.Body>
+            <Card.Title>{appt.patient_name}</Card.Title>
+            <Card.Text>
+              <strong>Appointment Date:</strong> {appt.appointment_date}<br />
+              <strong>Contact:</strong> {appt.contact}<br />
+              <strong>Age:</strong> {appt.age}<br />
+              <strong>Medical History:</strong> {appt.medical_history}<br />
+              <strong>Status:</strong> {appt.status}<br />
+              <strong>Mode:</strong> {appt.mode}
+            </Card.Text>
+            <Button
+              variant="info"
+              className="me-2"
+              onClick={() => handleViewSlip(appt.payment_proof)}
+            >
+              View Slip
+            </Button>
+            <Button variant="success" onClick={() => handleOpenModal(appt)}>
+              Confirm
+            </Button>
+          </Card.Body>
+        </Card>
+      ))}
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : error ? (
-        <div className="alert alert-danger">{error}</div>
-      ) : appointments.length === 0 ? (
-        <p>No pending appointments found.</p>
-      ) : (
-        <div className="row">
-          {appointments.map((appt) => (
-            <div className="col-md-6 mb-4" key={appt.appointment_id}>
-              <div className="card shadow-sm border-primary">
-                <div className="card-body">
-                  <h5 className="card-title">{appt.patientName}</h5>
-                  <p className="card-text mb-1"><strong>Appointment Date:</strong> {new Date(appt.appointment_date).toLocaleDateString()}</p>
-                  <p className="card-text mb-1"><strong>Contact:</strong> {appt.contact}</p>
-                  <p className="card-text mb-1"><strong>Age:</strong> {appt.age}</p>
-                  <p className="card-text mb-1"><strong>Medical History:</strong> {appt.medical_history}</p>
-                  <span className="badge bg-warning text-dark">{appt.status}</span>
-
-                  <div className="mt-3">
-                    <button className="btn btn-success btn-sm me-2" onClick={() => updateStatus(appt.appointment_id, 'Confirmed')}>Confirm</button>
-                    <button className="btn btn-danger btn-sm me-2" onClick={() => updateStatus(appt.appointment_id, 'Cancelled')}>Cancel</button>
-                    <button className="btn btn-info btn-sm" onClick={() => openRescheduleModal(appt.appointment_id)}>Reschedule</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Reschedule Modal */}
-      {showModal && (
-        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Reschedule Appointment</h5>
-                <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
-              </div>
-              <div className="modal-body">
-                <input
-                  type="date"
-                  className="form-control"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
+      {/* Modal for confirming appointment */}
+      <Modal show={showModal} onHide={handleCloseModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Appointment</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Consultation Time</Form.Label>
+              <Form.Control
+                type="time"
+                value={consultationData.consultation_time}
+                onChange={(e) =>
+                  setConsultationData({ ...consultationData, consultation_time: e.target.value })
+                }
+              />
+            </Form.Group>
+            {selectedAppointment?.mode === "physical" ? (
+              <Form.Group className="mb-3">
+                <Form.Label>Location</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Clinic/Hospital Address"
+                  value={consultationData.location}
+                  onChange={(e) =>
+                    setConsultationData({ ...consultationData, location: e.target.value })
+                  }
                 />
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Close</button>
-                <button className="btn btn-primary" onClick={handleReschedule}>Save changes</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+              </Form.Group>
+            ) : (
+              <Form.Group className="mb-3">
+                <Form.Label>Zoom Link</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="https://zoom.us/..."
+                  value={consultationData.zoom_link}
+                  onChange={(e) =>
+                    setConsultationData({ ...consultationData, zoom_link: e.target.value })
+                  }
+                />
+              </Form.Group>
+            )}
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleConfirmAppointment}>
+            Confirm Appointment
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
