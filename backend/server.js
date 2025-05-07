@@ -1438,17 +1438,17 @@ app.get("/api/appointments/payment-slip/:appointmentId", (req, res) => {
 // Confirm appointment and add details
 app.put("/api/appointments/confirm/:appointmentId", (req, res) => {
   const { appointmentId } = req.params;
-  const { mode, location, zoom_link, time } = req.body;
+  const { mode, location, zoom_link, consultation_time } = req.body;
 
   let updateQuery = "";
   let values = [];
 
   if (mode === "physical") {
     updateQuery = `UPDATE appointments SET status = 'Confirmed', location = ?, consultation_time = ? WHERE id = ?`;
-    values = [location, time, appointmentId];
+    values = [location, consultation_time, appointmentId];
   } else {
     updateQuery = `UPDATE appointments SET status = 'Confirmed', zoom_link = ?, consultation_time = ? WHERE id = ?`;
-    values = [zoom_link, time, appointmentId];
+    values = [zoom_link, consultation_time, appointmentId];
   }
 
   db.query(updateQuery, values, (err) => {

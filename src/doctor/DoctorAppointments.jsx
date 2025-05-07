@@ -61,9 +61,10 @@ const DoctorAppointments = () => {
     const { consultation_time, location, zoom_link } = consultationData;
     axios
       .put(`http://localhost:5000/api/appointments/confirm/${selectedAppointment.id}`, {
-        consultation_time,
+        mode:selectedAppointment.mode,
         location,
         zoom_link,
+        consultation_time,
       })
       .then((res) => {
         alert("Appointment confirmed successfully!");
