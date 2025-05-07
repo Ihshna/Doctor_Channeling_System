@@ -9,9 +9,11 @@ const fs=require("fs");
 const path=require("path");
 const { Parser } = require("json2csv");
 const axios=require('axios');
+const multer = require('multer');
 
 const app = express();
 const PORT = 5000;
+app.use("/uploads", express.static("uploads")); 
 
 // Middlewares
 app.use(cors());
@@ -1382,6 +1384,95 @@ app.delete('/api/appointments/cancel/:id', (req, res) => {
     res.json({ message: 'Appointment cancelled successfully' });
   });
 });
+
+// Multer storage for payment slip
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadPath = "uploads/payment_proof";
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const uniqueName = `payment_${Date.now()}${ext}`;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({ storage });
+
+// Upload payment slip
+app.post("/api/appointments/upload-slip/:appointmentId", upload.single("slip"), (req, res) => {
+  const appointmentId = req.params.appointmentId;
+  const slipPath = req.file ? req.file.path : null;
+
+  if (!slipPath) return res.status(400).json({ error: "No file uploaded" });
+
+  const sql = "UPDATE appointments SET payment_proof = ?, status = 'Pending' WHERE id = ?";
+  db.query(sql, [slipPath, appointmentId], (err) => {
+    if (err) {
+      console.error("Error updating appointment with slip:", err);
+      return res.status(500).json({ error: "Failed to upload slip" });
+    }
+
+    res.json({ message: "Payment slip uploaded successfully" });
+  });
+});
+
+// Get payment slip (for doctor)
+app.get("/api/appointments/payment-slip/:appointmentId", (req, res) => {
+  const { appointmentId } = req.params;
+  const sql = "SELECT payment_proof FROM appointments WHERE id = ?";
+  db.query(sql, [appointmentId], (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(404).json({ error: "Slip not found" });
+    }
+    res.json({ slip: results[0].payment_slip });
+  });
+});
+
+// Confirm appointment and add details
+app.put("/api/appointments/confirm/:appointmentId", (req, res) => {
+  const { appointmentId } = req.params;
+  const { mode, location, zoom_link, time } = req.body;
+
+  let updateQuery = "";
+  let values = [];
+
+  if (mode === "physical") {
+    updateQuery = `UPDATE appointments SET status = 'Confirmed', location = ?, consultation_time = ? WHERE id = ?`;
+    values = [location, time, appointmentId];
+  } else {
+    updateQuery = `UPDATE appointments SET status = 'Confirmed', zoom_link = ?, consultation_time = ? WHERE id = ?`;
+    values = [zoom_link, time, appointmentId];
+  }
+
+  db.query(updateQuery, values, (err) => {
+    if (err) {
+      console.error("Error confirming appointment:", err);
+      return res.status(500).json({ error: "Failed to confirm appointment" });
+    }
+    res.json({ message: "Appointment confirmed" });
+  });
+});
+
+// Get confirmed appointment info for patient
+app.get("/api/appointments/confirmed/:patientId", (req, res) => {
+  const { patientId } = req.params;
+  const sql = `
+    SELECT a.id, a.status, a.mode, a.appointment_date, a.consultation_time, a.location, a.zoom_link, d.name AS doctor_name 
+    FROM appointments a 
+    JOIN doctors d ON a.doctor_id = d.id
+    WHERE a.patient_id = ? AND a.status = 'Confirmed'
+    ORDER BY a.appointment_date DESC LIMIT 1
+  `;
+  db.query(sql, [patientId], (err, results) => {
+    if (err) return res.status(500).json({ error: "Error fetching confirmation" });
+    if (results.length === 0) return res.json({ message: "No confirmed appointment yet." });
+    res.json(results[0]);
+  });
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

@@ -67,6 +67,7 @@ const PatientDashboard = ({ patientId=(48) }) => {
               <Card.Title>Next Appointment</Card.Title>
               {nextAppointment ? (
                 <div>
+                  <p><strong>Appointment ID:</strong>{nextAppointment.id}</p>
                   <p><strong>Doctor ID:</strong> {nextAppointment.doctor_id}</p>
                   <p><strong>Date:</strong> {nextAppointment.appointment_date}</p>
                   <p><strong>Status:</strong> {nextAppointment.status}</p>

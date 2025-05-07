@@ -76,9 +76,7 @@ const PatientSidebar = () => {
           {openDoctor && (
             <ul className="nav flex-column ms-3 fade-in">
               <li><Link to="/patient-dashboard/doctors" className="nav-link">Browse Doctors</Link></li>
-              <li><Link to="/patient/appointments" className="nav-link">My Appointments</Link></li>
-              <li><Link to="/patient/payment" className="nav-link">Payment</Link></li>
-              <li><Link to="/patient/video-call" className="nav-link">Video Consultation</Link></li>
+              <li><Link to="/patient-dashboard/payment" className="nav-link">Payment</Link></li>
             </ul>
           )}
         </li>
