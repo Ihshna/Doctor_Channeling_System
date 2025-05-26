@@ -12,7 +12,7 @@ import {
 const DoctorSidebar = () => {
   const [openPatients, setOpenPatients] = useState(false);
   const [openPrescriptions, setOpenPrescriptions] = useState(false);
-  const [openReports, setOpenReports] = useState(false);
+  
 
   const navigate = useNavigate();
 
