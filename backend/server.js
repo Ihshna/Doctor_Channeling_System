@@ -1072,8 +1072,6 @@ app.post("/api/health-readings", (req, res) => {
     weight,
     blood_pressure,
     notes,
-    age,
-    gender,
     bmi,
     hypertension,
     heart_disease,
@@ -1104,11 +1102,9 @@ app.post("/api/health-readings", (req, res) => {
       // Upsert patient_details
       const upsertPatientDetailsQuery = `
         INSERT INTO patient_details 
-        (user_id, age, gender, bmi, hypertension, heart_disease, HbA1c_level, blood_glucose_level)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (user_id, bmi, hypertension, heart_disease, HbA1c_level, blood_glucose_level)
+        VALUES (?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
-          age = VALUES(age),
-          gender = VALUES(gender),
           bmi = VALUES(bmi),
           hypertension = VALUES(hypertension),
           heart_disease = VALUES(heart_disease),

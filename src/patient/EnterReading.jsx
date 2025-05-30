@@ -8,8 +8,6 @@ const EnterReading = ({ patientId }) => {
     weight: "",
     blood_pressure: "",
     notes: "",
-    age: "",
-    gender: "",
     bmi: "",
     hypertension: "0",
     heart_disease: "0",
@@ -42,8 +40,6 @@ const EnterReading = ({ patientId }) => {
           weight: "",
           blood_pressure: "",
           notes: "",
-          age: "",
-          gender: "",
           bmi: "",
           hypertension: "0",
           heart_disease: "0",
@@ -79,34 +75,8 @@ const EnterReading = ({ patientId }) => {
                   />
                 </div>
 
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Age</label>
-                  <input
-                    type="number"
-                    name="age"
-                    value={formData.age}
-                    className="form-control"
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
 
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Gender</label>
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    className="form-control"
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
+                
                 <div className="col-md-6 mb-3">
                   <label className="form-label">BMI</label>
                   <input
