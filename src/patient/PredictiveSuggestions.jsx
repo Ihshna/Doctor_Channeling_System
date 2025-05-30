@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Card, Button, Spinner, Badge, Alert } from 'react-bootstrap';
 
 const PredictiveSuggestions = () => {
-  const patientId = 48;
+  const patientId = 48; // or get from auth/session
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState(null);
   const [risk, setRisk] = useState('');
@@ -60,27 +60,18 @@ const PredictiveSuggestions = () => {
             <h6 className="text-primary">Diet Plan</h6>
             <p>{suggestion.diet}</p>
           </div>
+
           <div className="mt-3">
             <h6 className="text-primary">Exercise Plan</h6>
             <p>{suggestion.exercise}</p>
           </div>
+
           <div className="mt-3">
             <h6 className="text-primary">Lifestyle Tips</h6>
             <p>{suggestion.lifestyle}</p>
           </div>
-          {suggestion.medical && (
-            <div className="mt-3">
-              <h6 className="text-primary">Medical Guidance</h6>
-              <p>{suggestion.medical}</p>
-            </div>
-          )}
-          {suggestion.preventive && (
-            <div className="mt-3">
-              <h6 className="text-primary">Preventive Care</h6>
-              <p>{suggestion.preventive}</p>
-            </div>
-          )}
 
+          
           <div className="text-end mt-4">
             <Button variant="outline-primary" onClick={fetchSuggestion}>
               Recalculate Suggestion

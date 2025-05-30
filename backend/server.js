@@ -10,6 +10,7 @@ const path=require("path");
 const { Parser } = require("json2csv");
 const axios=require('axios');
 const multer = require('multer');
+const router = express.Router();
 
 const app = express();
 const PORT = 5000;
@@ -1063,33 +1064,74 @@ app.put("/api/patient/:id/medical-history", (req, res) => {
   });
 });
 
-// Add New Health Reading
 app.post("/api/health-readings", (req, res) => {
-  const { patient_id, reading_date, blood_sugar, weight, blood_pressure, notes } = req.body;
+  const {
+    patient_id,
+    reading_date,
+    blood_sugar,
+    weight,
+    blood_pressure,
+    notes,
+    age,
+    gender,
+    bmi,
+    hypertension,
+    heart_disease,
+    HbA1c_level,
+    blood_glucose_level,
+  } = req.body;
 
   if (!patient_id || !reading_date) {
     return res.status(400).json({ error: "Patient ID and Reading Date are required." });
   }
 
-  const query = `
+  // Insert into health_readings table
+  const insertHealthReadingQuery = `
     INSERT INTO health_readings 
     (patient_id, reading_date, blood_sugar, weight, blood_pressure, notes) 
     VALUES (?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
-    query,
+    insertHealthReadingQuery,
     [patient_id, reading_date, blood_sugar, weight, blood_pressure, notes],
     (err, result) => {
       if (err) {
         console.error("Error inserting health reading:", err);
-        return res.status(500).json({ error: "Failed to save reading" });
+        return res.status(500).json({ error: "Failed to save health reading" });
       }
 
-      res.status(201).json({ message: "Health reading added successfully" });
+      // Upsert patient_details
+      const upsertPatientDetailsQuery = `
+        INSERT INTO patient_details 
+        (user_id, age, gender, bmi, hypertension, heart_disease, HbA1c_level, blood_glucose_level)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          age = VALUES(age),
+          gender = VALUES(gender),
+          bmi = VALUES(bmi),
+          hypertension = VALUES(hypertension),
+          heart_disease = VALUES(heart_disease),
+          HbA1c_level = VALUES(HbA1c_level),
+          blood_glucose_level = VALUES(blood_glucose_level)
+      `;
+
+      db.query(
+        upsertPatientDetailsQuery,
+        [patient_id, age, gender, bmi, hypertension, heart_disease, HbA1c_level, blood_glucose_level],
+        (err2, result2) => {
+          if (err2) {
+            console.error("Error upserting patient details:", err2);
+            return res.status(500).json({ error: "Failed to save patient details" });
+          }
+
+          res.status(201).json({ message: "Health reading and patient details saved successfully" });
+        }
+      );
     }
   );
 });
+
 
 // Get reading history for a patient
 app.get("/api/patient/:id/health-readings", (req, res) => {
@@ -1225,18 +1267,16 @@ app.get("/api/export-patient-data", (req, res) => {
   });
 });
 
-// Predictive Suggestion Endpoint
-app.post('/api/predictive-suggestions/:patientId', (req, res) => {
+// Predictive suggestions endpoint
+app.post('/api/predictive-suggestions/:patientId', async (req, res) => {
   const patientId = req.params.patientId;
 
-  //Fetch patient data and latest health reading
   const query = `
     SELECT 
       u.id AS patient_id,
       u.name,
       p.age,
       p.gender,
-      p.medical_history,
       p.hypertension,
       p.heart_disease,
       p.bmi,
@@ -1254,13 +1294,11 @@ app.post('/api/predictive-suggestions/:patientId', (req, res) => {
 
   db.query(query, [patientId], async (err, results) => {
     if (err || results.length === 0) {
-      console.error("Error fetching patient data:", err);
-      return res.status(500).json({ error: "Patient data not found or DB error" });
+      console.error('Error fetching patient data:', err);
+      return res.status(500).json({ error: 'Patient data not found or DB error' });
     }
 
     const data = results[0];
-
-    //Format request for Flask ML model
     const payload = {
       age: data.age,
       gender: data.gender.toLowerCase(),
@@ -1270,48 +1308,46 @@ app.post('/api/predictive-suggestions/:patientId', (req, res) => {
       HbA1c_level: data.HbA1c_level,
       blood_glucose_level: data.blood_glucose_level,
       blood_sugar: data.blood_sugar,
-      weight: data.weight
+      weight: data.weight,
     };
 
     try {
-      // Send to Python model via Flask API
-      console.log("Payload being sent to Flask:".payload);
+      console.log('Payload sent to Flask:', payload);
       const response = await axios.post('http://127.0.0.1:5000/predict', payload);
 
       const { risk, suggestion } = response.data;
 
-      //Store prediction in DB
       const insertQuery = `
-        INSERT INTO predictive_suggestions 
-        (patient_id, risk_level, diet_plan, exercise_plan, lifestyle_tips) 
+        INSERT INTO predictive_suggestions
+        (patient_id, risk_level, diet_plan, exercise_plan, lifestyle_tips)
         VALUES (?, ?, ?, ?, ?)
       `;
 
       db.query(insertQuery, [
         patientId,
         risk,
-        suggestion.diet,
-        suggestion.exercise,
-        suggestion.lifestyle
+        suggestion.diet || '',
+        suggestion.exercise || '',
+        suggestion.lifestyle || '',
       ], (insertErr) => {
         if (insertErr) {
-          console.error("Insert Error:", insertErr);
-          return res.status(500).json({ error: "Failed to save prediction" });
+          console.error('Insert error:', insertErr);
+          return res.status(500).json({ error: 'Failed to save prediction' });
         }
 
         res.json({
-          message: "Predictive suggestion generated successfully",
+          message: 'Predictive suggestion generated successfully',
           risk,
           suggestion
         });
       });
-
     } catch (error) {
-      console.error("Flask API Error:", error.message);
-      res.status(500).json({ error: "Prediction service failed" });
+      console.error('Flask API error:', error.message);
+      res.status(500).json({ error: 'Prediction service failed' });
     }
   });
 });
+
 
 /// Get all doctors with booking info for a specific patient
 app.get('/api/doctors/details/:patientId', (req, res) => {
