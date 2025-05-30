@@ -43,7 +43,6 @@ const PatientSidebar = () => {
           {openProfile && (
             <ul className="nav flex-column ms-3 fade-in">
               <li><Link to="/patient-dashboard/profile" className="nav-link">Update Profile</Link></li>
-              <li><Link to="/patient-dashboard/medical-history" className="nav-link">Medical History</Link></li>
             </ul>
           )}
         </li>

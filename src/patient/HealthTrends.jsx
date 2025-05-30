@@ -20,7 +20,24 @@ const HealthTrends = ({ patientId }) => {
     axios
       .get(`http://localhost:5000/api/patient/${patientId}/health-trends`)
       .then((res) => {
-        setData(res.data);
+        // Parse blood_pressure (e.g. "120/80") to systolic number (120)
+        const parsedData = res.data.map((item) => {
+          let bpValue = null;
+          if (item.blood_pressure) {
+            const parts = item.blood_pressure.split("/");
+            if (parts.length === 2) {
+              bpValue = Number(parts[0]); // take systolic value
+            } else {
+              bpValue = Number(item.blood_pressure); // fallback if no slash
+            }
+          }
+          return {
+            ...item,
+            blood_pressure: bpValue,
+          };
+        });
+
+        setData(parsedData);
         setLoading(false);
       })
       .catch((err) => {
@@ -57,14 +74,14 @@ const HealthTrends = ({ patientId }) => {
       <div className="card shadow p-4">
         <h3 className="text-center text-primary mb-4">Health Trends</h3>
         <div className="text-center">
-              <button
-                className="btn btn-outline-primary"
-                onClick={handleDownloadPDF}
-                disabled={pdfDownloading}
-              >
-                {pdfDownloading ? "Generating PDF..." : "Download PDF Report"}
-              </button>
-            </div>
+          <button
+            className="btn btn-outline-primary"
+            onClick={handleDownloadPDF}
+            disabled={pdfDownloading}
+          >
+            {pdfDownloading ? "Generating PDF..." : "Download PDF Report"}
+          </button>
+        </div>
         {loading ? (
           <p className="text-center">Loading data...</p>
         ) : (
@@ -120,13 +137,11 @@ const HealthTrends = ({ patientId }) => {
                     type="monotone"
                     dataKey="blood_pressure"
                     stroke="#ff7300"
-                    name="Blood Pressure"
+                    name="Blood Pressure (Systolic)"
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
-
-            
           </>
         )}
       </div>

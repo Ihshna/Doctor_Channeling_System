@@ -1158,7 +1158,9 @@ app.get("/api/patient/:id/health-readings", (req, res) => {
 app.get("/api/patient/:id/health-trends", (req, res) => {
   const patientId = req.params.id;
   const query = `
-    SELECT reading_date, blood_sugar, weight, blood_pressure 
+    SELECT reading_date, blood_sugar, weight,
+    SUBSTRING_INDEX(blood_pressure, '/', 1) AS blood_pressure_systolic,
+  SUBSTRING_INDEX(blood_pressure, '/', -1) AS blood_pressure_diastolic
     FROM health_readings 
     WHERE patient_id = ? 
     ORDER BY reading_date ASC
