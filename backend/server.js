@@ -1114,7 +1114,7 @@ app.post("/api/health-readings", (req, res) => {
 
       db.query(
         upsertPatientDetailsQuery,
-        [patient_id, age, gender, bmi, hypertension, heart_disease, HbA1c_level, blood_glucose_level],
+        [patient_id,bmi, hypertension, heart_disease, HbA1c_level, blood_glucose_level],
         (err2, result2) => {
           if (err2) {
             console.error("Error upserting patient details:", err2);
@@ -1222,8 +1222,7 @@ app.get("/api/export-patient-data", (req, res) => {
   const query = `
     SELECT 
       u.id AS patient_id,
-      u.name, u.email,
-      pd.age, pd.gender, pd.bmi, pd.hypertension, pd.heart_disease,
+      u.name, u.email, pd.bmi, pd.hypertension, pd.heart_disease,
       pd.smoking_history, pd.HbA1c_level, pd.blood_glucose_level, pd.diabetes,
       hr.blood_sugar, hr.weight, hr.blood_pressure, hr.reading_date
     FROM users u
@@ -1273,8 +1272,6 @@ app.post('/api/predictive-suggestions/:patientId', async (req, res) => {
     SELECT 
       u.id AS patient_id,
       u.name,
-      p.age,
-      p.gender,
       p.hypertension,
       p.heart_disease,
       p.bmi,
@@ -1298,8 +1295,6 @@ app.post('/api/predictive-suggestions/:patientId', async (req, res) => {
 
     const data = results[0];
     const payload = {
-      age: data.age,
-      gender: data.gender.toLowerCase(),
       bmi: data.bmi,
       hypertension: data.hypertension,
       heart_disease: data.heart_disease,
