@@ -94,7 +94,7 @@ const DoctorAppointments = () => {
             </Card.Text>
             <Button
               variant="info"
-              className="me-2"
+              className="me-2 bg-secondary"
               onClick={() => handleViewSlip(appt.payment_proof)}
             >
               View Slip

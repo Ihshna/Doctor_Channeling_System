@@ -10,6 +10,7 @@ import {
   Alert,
   Spinner,
 } from "react-bootstrap";
+import {useNavigate} from "react-router-dom";
 
 const BrowseDoctors = () => {
   const [doctors, setDoctors] = useState([]);
@@ -19,7 +20,8 @@ const BrowseDoctors = () => {
   const [mode, setMode] = useState("Physical");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const navigate= useNavigate();
+  
   const patientId = 48;
 
   useEffect(() => {
@@ -28,7 +30,7 @@ const BrowseDoctors = () => {
 
   const fetchDoctors = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/doctors/details/${patientId}`);
+      const res = await axios.get(`http://localhost:5000/api/doctors/details/48}`);
       setDoctors(res.data);
     } catch (err) {
       console.error("Error fetching doctors:", err);
@@ -56,8 +58,11 @@ const BrowseDoctors = () => {
       });
 
       setMessage(res.data.message);
-      setShowModal(false);
+      setShowModal(false); 
       fetchDoctors();
+
+      //Redirect to Payment
+      navigate("/patient-dashboard/payment");
     } catch (err) {
       console.error("Booking error:", err);
       setMessage("Failed to book appointment.");
